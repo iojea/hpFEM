@@ -1,0 +1,13 @@
+name = "FEMhp"
+uuid = "856f3514-4c51-427e-8f70-dfca964ac716"
+authors = ["Ignacio Ojea"]
+version = "0.1.0-DEV"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
