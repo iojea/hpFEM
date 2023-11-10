@@ -3,6 +3,16 @@ uuid = "856f3514-4c51-427e-8f70-dfca964ac716"
 authors = ["Ignacio Ojea"]
 version = "0.1.0-DEV"
 
+[deps]
+DelaunayTriangulation = "927a84f5-c5f4-47a5-9785-b46e178433df"
+ExactPredicates = "429591f6-91af-11e9-00e2-59fbe8cec110"
+GrundmannMoeller = "36aa67b7-9d79-4e90-bbc0-05abd90a007e"
+LegendrePolynomials = "3db4a2ba-fc88-11e8-3e01-49c72059a882"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
+
 [compat]
 julia = "1"
 
