@@ -1,10 +1,3 @@
-include("refine.jl")
-using GrundmannMoeller
-using SparseArrays
-using StaticArrays
-using Base.Threads
-
-
 """ 
     `MatrixDict` and `ArrayDict` are unused, yet. The idea is to store the local mass and stiff matrices for each combination of values of `p`.
 """ 
@@ -13,13 +6,57 @@ const MatrixDict = Dict{NTuple{3,UInt8},SMatrix{Float64}}
 const ArrayDict  = Dict{NTuple{3,UInt8},SArray}
 
 
+
+function degrees_of_freedom_by_edge(mesh::MeshHP{F,I,P,Bool}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
+    (;edges) = mesh 
+    by_edge  = similar(mesh.edges,Vector{I})
+    i        = size(mesh.points,2)+1
+    for edge in edges
+        nod  = nodes(edge)
+        med  = collect(i:i+degree(edge)-2)
+        set!(by_edge,edge,[nod[1],med...,nod[2]])
+        i   += degree(edge)-1
+    end
+    return by_edge,i
+end
+
+function degrees_of_freedom(mesh::MeshHP{F,I,P,Bool}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
+    (;edges,triangles) = mesh
+    by_edge,i = degrees_of_freedom_by_edge(mesh)
+    dof     = similar(mesh.triangles,Vector{I})
+    for t in triangles
+        edges_t      = get_edges(t)
+        true_edges_t = [edges[e] for e in edges_t]
+        pind         = psortperm(degree(e) for e in true_edges_t)        
+        dof[t]       = zeros(I,compute_dimension((degree(e) for e in true_edges_t)...))
+        j = 1
+        @inbounds for i in pind
+            newdof = by_edge[edges_t[i]]
+            if edges_t[i] == nodes(true_edges_t[i])
+                dof[t][j:j+length(newdof)-1] .= newdof[1:end-1]
+            else
+                dof[t][j:j+length(newdof)-1] .= reverse(newdof[2:end])
+            end 
+            j += length(newdof)
+        end
+        dof[t][j:end] = j:j+length(dof[t])
+    end
+    return dof
+end
+
+function transform_matrix!(A,vert) 
+    @views A[:,1] .= vert[:,2]-vert[:,1] 
+    @views A[:,2] .= vert[:,3]-vert[:,1]
+end
+
+
 """
     compute_hat_mass(B::Basis)
 
 computes the mass matrix in the reference triangle fot the basis `B`. 
 """
 function compute_hat_mass(B::Basis)
-    @unpack nodes,b,C = B 
+    (;nodes,b,C) = B 
     sch = grundmann_moeller(Float64,Val(2),2length(nodes)+1)
     n   = length(b)
     M   = zeros(n,n)
@@ -38,7 +75,7 @@ end;
 computes the stiff matrix in the reference triangle fot the basis `B`. 
 """
 function compute_hat_stiff(base::Basis)
-    @unpack nodes,∇b,C = base
+    (;nodes,∇b,C) = base
     sch = grundmann_moeller(Float64,Val(2),2*length(nodes)+1)
     n   = length(∇b)
     S   = zeros(n,n,4)
@@ -67,21 +104,20 @@ function is_in_0(v,V;tol=1e-14)
 end
 
 
-function compute_mass(mesh::HPMesh,MD::MatrixDict)
-    (;P,T,Da,pT) = mesh
-    ℓ = sum(length,Da)
+function compute_mass(mesh::MeshHP,dof,MD::MatrixDict)
+    (;points,triangles,edges) = mesh
+    ℓ = sum(length.(dofs))
     I = Vector{Int64}(undef,ℓ)
     J = Vector{Int64}(undef,ℓ)
     V = Vector{Float64}(undef,ℓ)
     Aₜ= MMatrix{2,2}(zeros(2,2))
     r = 1
-    @inbounds for k in 1:size(T,2)
-        t    = view(T,:,k)
-        dofT = Da[k]
+    @inbounds for t in triangles
+        dofT = dof[t] 
         ℓₜ   = length(dofT)
-        Aₜ  .= [P[:,t[2]]-P[:,t[1]] P[:,t[3]]-P[:,t[1]]]
+        trasform_matrix!(Aₜ,view(points,:,nodes(t)))
         dAₜ  = abs(0.25det(Aₜ))
-        p    = pT[k]
+        p    = []# HAY QUE CALCULAR N PARA TRES p DISTINTOS Y VER SI NECESITO LOS DOFS COMPLETOS O Qué ..
         n    = Int((2p[2]-p[1]+2)*(p[1]+1)/2)
         v    = dAₜ*MD[p] 
         i = repeat(dofT,n)
@@ -97,12 +133,12 @@ end
 
 
 """
-    compute_stiff_std(mesh::HPMesh,BD::BasisDict)
+    compute_stiff_std(mesh::MeshHP,BD::BasisDict)
 
 computes the stiffness matrix corresponing to `mesh` following a standard approach i.e,: integrating on each triangle and not using the hat matrix.  
 """
 
-function compute_stiff_std(mesh::HPMesh,BD::BasisDict)
+function compute_stiff_std(mesh::MeshHP,BD::BasisDict)
     (;P,T,pT,pE,D,Da) = mesh
     ℓ = sum(x->length(x)^2,Da)
     I = Vector{Int64}(undef,ℓ)

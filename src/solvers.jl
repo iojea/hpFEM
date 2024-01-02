@@ -1,6 +1,3 @@
-include("matrices.jl")
-using LinearSolve
-using CuthillMcKee
 
 
 function poisson_rectangle(a,b,h,f)
@@ -34,7 +31,7 @@ function laplacian_rectangle(a,b,h,p,f;method=:inexact)
     #show_sol(dof,ndof,u)
 end;
 
-function error_L²(mesh::HPMesh,bd::BasisDict,u::Vector{Float64},sol::Function)
+function error_L²(mesh::MeshHP,bd::BasisDict,u::Vector{Float64},sol::Function)
     (;P,T,pT,pE,Da) = mesh
     pmax  = maximum(pE)
     sch   = grundmann_moeller(Float64,Val(2),4pmax+1)

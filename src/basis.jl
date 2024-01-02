@@ -1,9 +1,3 @@
-using LinearAlgebra
-using LegendrePolynomials
-using StaticArrays
-
-
-
 """
     Basis():
 
@@ -31,7 +25,7 @@ function Basis(p₁,p₂,p₃)
     nodes = boundary_nodes(p₁,p₂,p₃)
     b     = standard_basis(p₁,p₂,p₃)
     ∇b    = ∇standard_basis(p₁,p₂,p₃)
-    C     = matrix_C_new(b,nodes)
+    C     = matrix_C(b,nodes)
     Basis(dim,nodes,b,∇b,C)
 end
 Basis(p₁,p₂)   = Basis(p₁,p₂,p₂)
@@ -91,18 +85,6 @@ boundary_nodes(t::Tuple) = boundary_nodes(t...)
 
 Builds the standard basis on T̂, meaning: bₖ(x) = Pᵢ(x₁)Pⱼ(x₂), where Pᵢ is the i-th polynomial of Legendre. It returns a vector of functions. 
 """ 
-function standard_basis_old(p₁,p₂)
-    n = Int((2p₂-p₁+2)*(p₁+1)/2)
-    B = Vector{Function}(undef,n)
-    k = 1
-    for i in 0:p₁
-        for j in 0:p₂-i
-            B[k] = x->Pl(x[1],i)*Pl(x[2],j)
-            k   += 1
-        end
-    end
-    return B
-end;
 function standard_basis(p₁,p₂,p₃)
     n = compute_dimension(p₁,p₂,p₃)
     B = Vector{Function}(undef,n)
@@ -175,17 +157,8 @@ end
 Computes the matrix that transforms the standard basis into the mixed basis. F is the matrix of evaluations of the standard base at the boundary nodes. The number of degrees of freedom is ``n=n_N+n_B``, where ``n_N`` is the number of nodes at the boundary (and consequently: of nodal functions) and ``n_B`` the number of bubble functions. Hence, the size of F is ``n_N × n``.
 
 """
-function matrix_C(B,nod)
-    F     = matrix_F(B,nod)
-    nₙ,n  = size(F)
-    U,Σ,V = svd!(F,full=true)
-    S     = Diagonal(1. ./Σ)
-    V₁    = V[:,1:nₙ]
-    V₂    = V[:,nₙ+1:n]
-    C     = SMatrix{n,n}([V₁*S*U' V₂])
-end;
 
-function matrix_C_new(B,nod)
+function matrix_C(B,nod)
     nₙ = size(nod,2)
     n  = length(B)
     F     = matrix_F(B,nod)

@@ -4,11 +4,18 @@ authors = ["Ignacio Ojea"]
 version = "0.1.0-DEV"
 
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
+CuthillMcKee = "17f17636-5e38-52e3-a803-7ae3aaaf3da9"
 DelaunayTriangulation = "927a84f5-c5f4-47a5-9785-b46e178433df"
+Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+ElasticArrays = "fdbdab4c-e67f-52f5-8c3f-e7b388dad3d4"
 ExactPredicates = "429591f6-91af-11e9-00e2-59fbe8cec110"
 GrundmannMoeller = "36aa67b7-9d79-4e90-bbc0-05abd90a007e"
 LegendrePolynomials = "3db4a2ba-fc88-11e8-3e01-49c72059a882"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LinearSolve = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
