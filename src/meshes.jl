@@ -1,3 +1,7 @@
+const EdgeList{I,P} = DictHP{2,I,EdgeProperties{P,Bool}} where {I<:Integer,P<:Integer}
+const TriangleList{I,P} = DictHP{3,I,TriangleProperties{P}} where {I<:Integer,P<:Integer}
+
+
 """
     MeshHP{F<:AbstractFloat,I<:Integer,P<:Integer}()
 
@@ -9,23 +13,21 @@ A mesh for `HP` finite element methods. Its fields are:
     MeshHP(tri::TriangulationIO)
 builds an `MeshHP` from a `Triangulate.TriangulatioIO` struct.  
 """
-struct MeshHP{F<:AbstractFloat,I<:Integer,P<:Integer,Bool}
+struct MeshHP{F<:AbstractFloat,I<:Integer,P<:Integer}
     points::ElasticMatrix{F,Vector{F}}
-    triangles::FESet{TriangleHP{I,P}}
-    edges::FESet{EdgeHP{I,P,Bool}}    
+    triangles::TriangleList{I,P}
+    edges::EdgeList{I,P}    
 end
 MeshHP(mat::Matrix,tris,edgs) = MeshHP(ElasticMatrix(mat),tris,edgs)
 Base.copy(mesh::MeshHP) = MeshHP(deepcopy(mesh.points),deepcopy(mesh.triangles),deepcopy(mesh.edges))
-
-@inline get_edges(t::TriangleHP,mesh::MeshHP) = [mesh.edges[e] for e in get_edges(t)]
 
 function MeshHP(tri::TriangulateIO)
     (;pointlist,trianglelist,edgelist,edgemarkerlist) = tri
     F = eltype(pointlist)
     I = eltype(trianglelist)
     P = UInt8
-    triangles = FESet([triangle(v,pointlist) for v in eachcol(trianglelist)])
-    edges = FESet([EdgeHP{I,P,Bool}(e,1,edgemarkerlist[i],false) for (i,e) in enumerate(eachcol(edgelist))] )
+    triangles = TriangleList{I,P}([triangle(t,pointlist) for t in eachcol(trianglelist)],[TriangleProperties{P}(0) for _ in 1:size(trianglelist,2)])
+    edges = dicthp([EdgeHP{I}(e) => EdgeProperties{P,Bool}(1,edgemarkerlist[i],false) for (i,e) in enumerate(eachcol(edgelist))] )
     MeshHP(pointlist,triangles,edges)
 end
 

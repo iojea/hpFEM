@@ -19,27 +19,26 @@ function Makie.plot!(p::PlotMeshHP)
     bluetris  = filter(isblue,triangles)
     redtris   = filter(isred,triangles)
     if !isempty(noreftris)
-        noref = hcat([Vector(nodes(t)) for t in noreftris]...)'
+        noref = hcat([Vector(t) for t in keys(noreftris)]...)'
         poly!(p,points',noref,color=:gray,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
     if !isempty(greentris)
-        green = hcat([Vector(nodes(t)) for t in greentris]...)'
+        green = hcat([Vector(t) for t in keys(greentris)]...)'
         poly!(p,points',green,color=:olivedrab,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
     end
     if !isempty(bluetris)
-        blue  = hcat([Vector(nodes(t)) for t in bluetris]...)'
+        blue  = hcat([Vector(t) for t in keys(bluetris)]...)'
         poly!(p,points',blue,color=:dodgerblue,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
     end
     if !isempty(redtris)
-        red   = hcat([Vector(nodes(t)) for t in redtris]...)'
+        red   = hcat([Vector(t) for t in keys(redtris)]...)'
         poly!(p,points',red,color=:tomato,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
 
-    for e in edges
-        nod = nodes(e)
-        x = Vector(points[1,nod])
-        y = Vector(points[2,nod])
-        lines!(p,x,y,linewidth=p[:linewidth][],color= begin ismarked(e) ? :black : :white end)
+    for e in keys(edges)
+        x = Vector(points[1,e])
+        y = Vector(points[2,e])
+        lines!(p,x,y,linewidth=p[:linewidth][],color= begin ismarked(edges[e]) ? :black : :white end)
     end
     if p[:annotate][]
         for (i,dot) in enumerate(eachcol(points))

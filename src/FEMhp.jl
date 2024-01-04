@@ -18,13 +18,13 @@ using CuthillMcKee
 
 include("triangles.jl")
 include("edges.jl")
-include("sets.jl")
+include("dicthp.jl")
 include("meshes.jl")
 include("refine.jl")
 include("plots.jl")
-include("basis.jl")
-include("matrices.jl")
-include("solvers.jl")
+# include("basis.jl")
+# include("matrices.jl")
+# include("solvers.jl")
 
-export TriangleHP, EdgeHP, FESet, MeshHP, circular_mesh, circular_mesh_graded_to_center, mark!, mark_triangles!, estim_distance_origin, sort_degrees, plotmeshhp,set_degree!,degrees_of_freedom, degree
+export TriangleHP, EdgeHP, DictHP, MeshHP, circular_mesh, circular_mesh_graded_to_center, mark!, mark_triangles!, estim_distance_origin, sort_degrees, plotmeshhp,set_degree!,degrees_of_freedom, degree
 end
