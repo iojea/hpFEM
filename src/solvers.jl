@@ -1,3 +1,37 @@
+struct ConstantCoeffProblem{F,I,P} where {F<:AbstractFloat,I<:Integer,P<:Integer}
+    Ω::MeshHP{F,I,P}
+    α::F
+    v⃗::SVector{2,F}
+    c::F
+    f::Function
+end
+function ConstantCoeffProblem(Ω::Mesh{F,I,P},α,v⃗::Vector,c,f)  where {F,I,P}
+    ConstantCoeffProblem(Ω,convert(F,α),SVector(v⃗),convert(F,c),f)
+end
+
+
+function solve!(prob::ConstantCoeffProblem)
+    (;Ω,α,v⃗,c,f) = prob
+    bd = basisdict(mesh)
+    ad = stiffdict(mesh,bd) 
+    by_edge = degrees_of_freedom_by_edge(mesh) 
+    dof = degrees_of_freedom(mesh,by_edge)
+    A  = stiff(Ω,dof,ad,bd)
+    if c≠0
+        md = massdict(Ω,bd)
+        A += mass(Ω,dof,md,bd)
+    end
+    if v⃗[1]≠0 || v⃗[1]≠0
+        cd = convdict(Ω,bd)
+        A += conv(Ω,dof,cd,bd)
+    end
+    b = rhs(Ω,dof,bd,f)
+    u = zeros(length(b))
+    ∂dof = boundary_dof(mesh,by_edge)
+    idof = setdiff(1:sum(length.(by_edge)),∂dof)
+    u[idof] = A[idof,idof]\b[idof]
+    return u
+end
 
 
 function poisson_rectangle(a,b,h,f)

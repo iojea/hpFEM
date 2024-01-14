@@ -1,3 +1,14 @@
+struct DegTuple{I} <: HPTuple{3,I} 
+    degs::SVector{3,I}
+end
+DegTuple(v::Vector) = DegTuple(SVector{3}(v))
+DegTuple{I}(v::Vector) where I = DegTuple(SVector{3,I}(v))
+DegTuple(p₁,p₂,p₃) = DegTuple(SVector{3}([p₁,p₂,p₃]))
+DegTuple{I}(p₁,p₂,p₃) where I = DegTuple(SVector{3,I}([p₁,p₂,p₃]))
+
+
+vals(d::DegTuple) = d.degs
+
 """
     Basis():
 
@@ -10,18 +21,16 @@ Defines the elements of a standard basis:
 
 The constructor `Basis(p₁[,p₂,p₃])` builds the basis corresponding to the edges degrees `p₁`, `p₂` and `p₃`. As usual, if `p₃` is not given it is assumed that `p₃=p₂`, and if `p₂` and `p₃` are not given, it is assumed that `p₂=p₃=p₁`. 
 """
-struct Basis{N1,N2,I<:Integer,T<:AbstractFloat,F<:Function,V<:Vector{F},M1<:SMatrix{2,N1}{T}, M2<:SMatrix{N1,N2}{T}} 
+struct Basis{N1,N2,I<:Integer,T<:AbstractFloat,F<:Function,}
     dim::I
-    nodes::M1
-    b::V 
-    ∇b::V 
-    C::M2
+    nodes::SMatrix{2,N1,T}
+    b::Vector{F}
+    ∇b::Vector{F}
+    C::SMatrix{N1,N2,T}
 end
 
 function Basis(p₁,p₂,p₃)
-    println("Creating basis: ($p₁,$p₂,$p₃)")
     dim   = compute_dimension(p₁,p₂,p₃)
-    println("Dimension = $dim")
     nodes = boundary_nodes(p₁,p₂,p₃)
     b     = standard_basis(p₁,p₂,p₃)
     ∇b    = ∇standard_basis(p₁,p₂,p₃)
@@ -30,15 +39,16 @@ function Basis(p₁,p₂,p₃)
 end
 Basis(p₁,p₂)   = Basis(p₁,p₂,p₂)
 Basis(p₁::T) where T<:Integer  = Basis(p₁,p₁) 
-Basis(t::T) where T<:Tuple = Basis(t...)
+Basis(t::T) where T<:AbstractArray = Basis(t...)
+Basis(t::DegTuple) = Basis(t...)
+
+
 """
     const BasisDict
 
-Defines a dictionary with an `NTuple{3,Int}` containing the values `(p₁,p₂,p₃)` as key and a `Basis` as value. 
+Defines a dictionary with an `NTuple{3,Int}` containing the vals `(p₁,p₂,p₃)` as key and a `Basis` as value. 
 """
-const BasisDict = Dict{NTuple{3,UInt8},Basis}
-
-
+const BasisDict{I} = Dictionary{DegTuple{I},Basis}
 
 
 """
@@ -46,15 +56,15 @@ const BasisDict = Dict{NTuple{3,UInt8},Basis}
     compute_dimension(p₁,p₂,p₃)
     compute_dimension(p₁,p₂)   
     compute_dimension(p₁)
-    compute_dimension(set::Set)
+    compute_dimension(t::AbstractArray)
 
-Computes the dimension of the space 𝒫p₁p₂p₃. 
+Computes the dimension of the space ℓp₁p₂p₃. 
 """
 compute_dimension(p₁,p₂,p₃) = sum(min(p₂,p₃-j)+1 for j in 0:p₁);
 compute_dimension(p₁,p₂)    = compute_dimension(p₁,p₂,p₂)
 compute_dimension(p₁)       = compute_dimension(p₁,p₁)
-compute_dimension(t::T) where T<:Tuple = compute_dimension(t...)
-
+compute_dimension(t::T) where T<:AbstractArray = compute_dimension(t...)
+compute_dimension(t::DegTuple) = compute_dimension(t...)
 
 
 """
@@ -76,7 +86,8 @@ end;
 
 boundary_nodes(p₁,p₂) = boundary_nodes(p₁,p₂,p₂);
 boundary_nodes(p₁::T) where T<:Integer = boundary_nodes(p₁,p₁,p₁);
-boundary_nodes(t::Tuple) = boundary_nodes(t...)
+boundary_nodes(t::AbstractArray) = boundary_nodes(t...)
+boundary_nodes(t::DegTuple) = boundary_nodes(t...)
 
 
 """
@@ -99,7 +110,8 @@ function standard_basis(p₁,p₂,p₃)
 end;
 standard_basis(p₁,p₂) = standard_basis(p₁,p₂,p₂)
 standard_basis(p₁::T) where T<:Integer    = standard_basis(p₁,p₁);
-standard_basis(t::Tuple) = standard_basis(t...)
+standard_basis(t::T) where T<:AbstractArray = standard_basis(t...)
+standard_basis(t::DegTuple) = standard_basis(t...)
 
 """
 
@@ -121,7 +133,8 @@ function ∇standard_basis(p₁,p₂,p₃)
 end;
 ∇standard_basis(p₁,p₂) = ∇standard_basis(p₁,p₂,p₂);
 ∇standard_basis(p₁::T) where T<:Integer    = ∇standard_basis(p₁,p₁);
-∇standard_basis(t::Tuple) = ∇standard_basis(t...);
+∇standard_basis(t::T) where T<:AbstractArray = ∇standard_basis(t...);
+∇standard_basis(t::DegTuple) = ∇standard_basis(t...);
 
 
 """
