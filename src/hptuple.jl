@@ -65,8 +65,8 @@ Base.view(A::AbstractArray,t::HPTuple,c::Colon) = view(A,vals(t),c)
 function Base.sizehint!(d::Dictionary,n::Int)
     sizehint!(d.indices.slots,(1+n÷8)*8)
     sizehint!(d.indices.hashes,n)
-    sizehint!(d.indices.vals,n)
-    sizehint!(d.vals,n)
+    sizehint!(d.indices.values,n)
+    sizehint!(d.values,n)
 end
 # import Dictionaries: gettokenvalue, settokenvalue!,gettoken,gettoken!, deletetoken!, iteratetoken,distinct,pairs
 

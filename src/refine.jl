@@ -209,7 +209,7 @@ function refine!(mesh::MeshHP{F,I,P}) where {F<:AbstractFloat,I<:Integer,P<:Inte
     n_tris  = 4count(isred,trilist)+3count(isblue,trilist)+2count(isgreen,trilist)
     sizehint!(trilist,length(trilist)+n_tris)
     sizehint!(edgelist,length(trilist)+n_edgelist)
-    append!(points,zeros(F,2,2n_edgelist))
+    append!(points,zeros(F,2,n_edgelist))
     refaux  = RefAux(i,mesh)
     for t in triangles(trilist)
         if isred(trilist[t])

@@ -49,7 +49,7 @@ function degrees_of_freedom(mesh::MeshHP{F,I,P},by_edge::Dictionary{EdgeHP{I},Ve
     return dof
 end
 
-function boundary_dof(mesh::MeshHP{F,I,P},by_edge)
+function boundary_dof(mesh::MeshHP{F,I,P},by_edge) where {F,I,P}
     (;edgelist) = mesh
     v = I[]
     for e in edges(edgelist)
