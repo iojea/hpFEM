@@ -46,28 +46,6 @@ function same_order(e::EdgeHP{I},elist::EdgeList{I}) where I
     nodes(oe) == nodes(e)
 end
 
-function Base.show(io::IO,mime::MIME"text/plain",mesh::MeshHP{I,P}) where {I,P}
-    println(io,typeof(mesh))
-    header = Markdown.parse("""
-        + $(size(mesh.points,2)) nodes.
-        + $(length(mesh.trilist)) triangles.
-        + $(length(mesh.edgelist)) edges.
-    """)
-    show(io,mime,header)
-    show(io,mime,mesh.points)
-    println(io)
-    show(io,mime,mesh.trilist)
-    println(io)
-    show(io,mime,mesh.edgelist)
-end
-function Base.show(io::IO,mesh::MeshHP)
-    println(io,)
-    show(io,mesh.points)
-    println(io)
-    show(io,mesh.trilist)
-    println(io)
-    show(io,mesh.edgelist)
-end
 
 function psortperm(v)
     i    = argmin(v)
@@ -80,11 +58,14 @@ function psortperm(v)
 end
 
 function pedges(t::TriangleHP{I},mesh::MeshHP{F,I,P}) where {F,I,P}
-    (;edgelist) = mesh
-    eds  = edges(t)
-    p    = degree.(getindices(edgelist,eds))
-    pind = psortperm(p)
-    DegTuple(p[pind]),eds[pind] 
+    p,nod = pnodes(t,mesh)
+    eds   = [EdgeHP(nod[i],nod[mod1(i+1,3)]) for i in 1:3]
+    #(;edgelist) = mesh
+    #eds  = edges(t)
+    #p    = degree.(getindices(edgelist,eds))
+    #pind = psortperm(p)
+    #DegTuple(p[pind]),eds[pind] 
+    p,eds
 end
 
 function pnodes(t::TriangleHP{I},mesh::MeshHP{F,I,P}) where {F,I,P}
@@ -173,7 +154,7 @@ function boundarynodes(mesh::MeshHP{F,I,P}) where {F,I,P}
     v = zeros(I,sum(==(1),marker.(edgelist)))
     i = 1
     for e in edges(edgelist)
-        if marker(edgelist[e])==1
+        if 1≤ marker(edgelist[e])≤ 2
             for j in e
                 if j ∉ v
                     v[i] = j
@@ -183,4 +164,15 @@ function boundarynodes(mesh::MeshHP{F,I,P}) where {F,I,P}
         end
     end
     v
+end
+
+function meshhp(vertices,boundary_edges,boundary_mark,h)
+    tri = TriangulateIO()
+    tri.pointlist = vertices
+    tri.segmentlist = boundary_edges
+    tri.segmentmarkerlist = boundary_mark
+    maxarea  = Printf.@sprintf "%0.15f" h^2/2
+    minangle = Printf.@sprintf "%0.15f" 30.
+    (tri,_) = triangulate("pea$(maxarea)q$(minangle)Q",tri)
+    MeshHP(tri)
 end

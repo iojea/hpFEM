@@ -1,87 +1,212 @@
-struct ConstantCoeffProblem{F,I,P} where {F<:AbstractFloat,I<:Integer,P<:Integer}
-    Ω::MeshHP{F,I,P}
+"""
+    DegreesOfFreedom{I<:Integer}
+
+Structure that stores the degrees of freedom of a given mesh. Two dictionaries (from `Dictionaries.jl`) are used: 
+    + `by_edge`: its keys are the edges of the mesh and its values a vector of indices (of type `I`) for the degrees of freedom. This dictionary contains all the nodal dof.
+    + `by_tri`: similar to `by_edge`, but including the degrees of freedom corresponding to bubble functions. 
+"""
+mutable struct DegreesOfFreedom{I<:Integer}
+    by_tri::DofDict{I}
+    by_edge::EdgeDofDict{I}
+end
+function DegreesOfFreedom(mesh::MeshHP)
+    by_edge = degrees_of_freedom_by_edge(mesh)
+    by_tri  = degrees_of_freedom(mesh,by_edge)
+    DegreesOfFreedom(by_tri,by_edge)
+end
+
+"""
+    BoundaryConditions
+
+Structure that stores the functions corresponding to the `dirichlet` and `neumann` conditions.
+    BoundaryConditions()
+sets homogeneous Dirichlet boundary conditions on the whole boundary  (`dirichlet = isequal(0)` and `neumann = nothing`). 
+
+    BoundaryConditions(f::Function)
+sets `dirichlet = f` and `neumann = nothing`.
+
+    Named arguments can be used:
+
+```julia
+
+    julia> f(x) = x[1] > 0 ? 1. : 0.;
+    julia> g(x) = x[1]^2 + x[2]^2
+    julia> bc = BoundaryConditions(dirichlet = f, neumann = g)
+```
+"""
+struct BoundaryConditions
+    dirichlet::Union{Function,Nothing}
+    neumann::Union{Function,Nothing}
+end
+BoundaryConditions(f::Function) = BoundaryConditions(f,nothing)
+BoundaryConditions(;dirichlet=isequal(0.),neumann=isequal(0.)) = BoundaryConditions(dirichlet,neumann)
+
+"""
+    ReferenceDicts{P<:Integer}
+
+Stores dictionaries (from `Dictionaries.jl`) containing information computed on the reference triangle `T̂`, with vertices `[-1,1]`, `[-1,-1]` and `[1,-1]`. All dictionaries have keys given by `DegTuple`s corresponding to the combinations of degrees `(p₁,p₂,p₃)` that are present in a given mesh.  `P` is the type of the degrees. 
+The dictionaries are: 
+    + `basisref`: stores the al the information corresponding to the local basis and its gradientes.
+    + `stiffref`: stores integrals of the form `∫∇Φᵢ∇ΦⱼdT̂` that are used for the assembly of the stiff matrix. 
+    + `massref`: stores integrals of the form `∫ΦᵢΦⱼdT̂` that are used for the assembly of the mass matrix.
+    + `convref`: stores integrals of the form `∫∇ΦᵢΦⱼdT̂` that are used for the assembly of the convection matrix. 
+If some matrix is not present on an instance of `ConstantCoeffProblem`, the corresponding dictionary is set to `nothing`. 
+"""
+struct ReferenceDicts{P<:Integer}
+    basisref::Union{BasisDict{P},Nothing}
+    stiffref::Union{ArrayDict{P},Nothing}
+    massref::Union{MatrixDict{P},Nothing}
+    convref::Union{BiMatrixDict{P},Nothing}
+end
+function ReferenceDicts(mesh::MeshHP{F,I,P}) where {F,I,P}
+    bd  = basisdict(mesh)
+    sd  = stiffdict(mesh,bd)
+    md  = massdict(mesh,bd)
+    cd  = convdict(mesh,bd)
+    ReferenceDicts(bd,sd,md,cd)
+end
+
+function update!(ref::ReferenceDicts,mesh)
+    (;bd,sd,md,cd) = ref
+    update!(bd,mesh)
+    update!(sd,mesh)
+    if md !== nothing
+        update!(md,mesh)
+    end
+    if cd !== nothing
+        update!(cd,mesh)
+    end
+end
+
+"""
+    ConstantCoeff{F<:AbstractFloat,U<:Function}
+
+Stores the coefficients and right hand side of a `ConstantCoeffProblem`. In other words, for a problem of the form:  
+
+    α∫∇u⋅∇Φ + ∫v⃗⋅∇u Φ + c∫uΦ = ∫fΦ
+the `ConstantCoeff` `struct` stores the numbers `α` and `c`, the vector `v⃗` and the function `f`. 
+
+    ConstantCoeff(α,v⃗,c,f)
+creates a `struct` of constant coefficients promoting `α,c` and the coeffients of `v⃗` to a common number type. 
+
+    ConstantCoeff{F}(α,v⃗,c,f) where F<:AbstractFloat
+creates a `struct` of constant coefficients converting all coefficients to type `F`.
+
+    ConstantCoeff(α,c,f)
+sets `v⃗` to a vector of zeros. 
+
+    ConstantCoeff(α,f)
+sets `v⃗` and `c` to zero.
+
+    ConstantCoeff(α)
+sets `v⃗` and `c` to zero and `f=isequal(0)`. 
+"""
+struct ConstantCoeff{F<:AbstractFloat,U<:Function}
     α::F
     v⃗::SVector{2,F}
     c::F
-    f::Function
+    f::U
 end
-function ConstantCoeffProblem(Ω::Mesh{F,I,P},α,v⃗::Vector,c,f)  where {F,I,P}
-    ConstantCoeffProblem(Ω,convert(F,α),SVector(v⃗),convert(F,c),f)
+function ConstantCoeff(α,v⃗,c,f)
+    α,v₁,v₂,c = promote(α,v⃗...,c)
+    v⃗         = SVector{2}([v₁,v₂])
+    ConstantCoeff(α,v⃗,c,f)
+end
+ConstantCoeff{F}(α,v⃗,c,f) where F<:AbstractFloat = ConstantCoeff(F(α),SVector{2,F}(v⃗),F(c),f)
+ConstantCoeff(α,v⃗::V,f) where V<:AbstractVector = ConstantCoeff(α,v⃗,convert(typeof(α),0),f)
+ConstantCoeff(α,c,f) = ConstantCoeff(α,SVector{2,typeof(α)}(zeros(2)),c,f)
+ConstantCoeff(α,f::U) where U<:Function = ConstantCoeff(α,convert(typeof(α),0),f)
+ConstantCoeff(α) = ConstantCoeff(α,isequal(0))
+
+"""
+   ConstantCoeffProblem 
+
+A problem of the form 
+    α∫∇u⋅∇ϕ + ∫v⃗⋅∇u ϕ + c∫uϕ = ∫fϕ
+where `α`, `v⃗` and `c` are constants and `f` is a given function.  
+"""
+mutable struct ConstantCoeffProblem{F<:AbstractFloat,I<:Integer,P<:Integer}
+    Ω::MeshHP{F,I,P}
+    coeff::ConstantCoeff{F}
+    ref::ReferenceDicts{P}
+    dof::Union{DegreesOfFreedom{I},Nothing}
+    bc::BoundaryConditions
+end
+
+#General constructor
+function ConstantCoeffProblem(Ω::MeshHP{F,I,P},α,v⃗::AbstractVector,c,f::Function,bc::BoundaryConditions)  where {F,I,P}
+    bd  = basisdict(mesh)
+    sd  = stiffdict(mesh,bd)
+    md  = c!=0 ? massdict(mesh,bd) : nothing
+    cd  = v⃗[1]!=0 || v⃗[2]!=0 ? convdict(mesh,bd) : nothing
+    ref = ReferenceDicts(bd,sd,md,cd)
+    dof = DegreesOfFreedom(mesh)
+    coeff = ConstantCoeff(α,SVector{2,F}(v⃗),c,convert(F,c),f)
+    ConstantCoeffProblem(Ω,coeff,ref,dof,bc)
+end
+
+#Constructor for diffusion
+function ConstantCoeffProblem(Ω::MeshHP{F,I,P},α::R,f::Function,bc::BoundaryConditions) where {F,I,P,R<:Number}
+    ConstantCoeffProblem(Ω,F(α),SVector{2,F}(zeros(2)),F(0),f,bc) 
+end
+#Constructor for reaction-diffusion
+function ConstantCoeffProblem(Ω::MeshHP{F,I,P},α::R,c::R,f::Function,bc::BoundaryConditions) where {F,I,P,R<:Number}   ConstantCoeffProblem(Ω,F(α),SVector{2,F}(zeros(2)),F(c),f,bc) 
+end
+
+function ConstantCoeffProblem(Ω::MeshHP{F,I,P},α::R,v⃗::V,f::Function,bc::BoundaryConditions) where {F,I,P,R<:Number,V<:AbstractVector}
+    ConstantCoeffProblem(Ω,F(α),SVector{2,F}(v⃗),F(0),f,bc) 
+end
+
+function update!(prob::ConstantCoeffProblem)
+    (;Ω,ref,dof) = prob
+    dof = DegreesOfFreedom(Ω)
+    update!(ref)
 end
 
 
-function solve!(prob::ConstantCoeffProblem)
-    (;Ω,α,v⃗,c,f) = prob
-    bd = basisdict(mesh)
-    ad = stiffdict(mesh,bd) 
-    by_edge = degrees_of_freedom_by_edge(mesh) 
-    dof = degrees_of_freedom(mesh,by_edge)
-    A  = stiff(Ω,dof,ad,bd)
+
+
+function CommonSolve.solve(prob::ConstantCoeffProblem)
+    (;Ω,coeff,ref,dof,bc) = prob
+    (;α,v⃗,c,f) = coeff
+    (;basisref,stiffref,massref,convref) = ref
+    (;by_tri,by_edge) = dof
+    A  = stiff(Ω,by_tri,stiffref,basisref)
     if c≠0
-        md = massdict(Ω,bd)
-        A += mass(Ω,dof,md,bd)
+        A += mass(Ω,by_tri,massref,basisref)
     end
     if v⃗[1]≠0 || v⃗[1]≠0
-        cd = convdict(Ω,bd)
-        A += conv(Ω,dof,cd,bd)
+        A += conv(Ω,by_tri,convref,basisref)
     end
     b = rhs(Ω,dof,bd,f)
     u = zeros(length(b))
-    ∂dof = boundary_dof(mesh,by_edge)
-    idof = setdiff(1:sum(length.(by_edge)),∂dof)
-    u[idof] = A[idof,idof]\b[idof]
+    ∂dof = boundary_dof(Ω,by_edge)
+    idof = setdiff(1:maximum(maximum.(by_tri)),∂dof)
+    linprob  = LinearProblem(A[idof,idof],b[idof])#,alias_A=true,alias_b=true)
+    sol = solve(linprob,abstol=1e-12,reltol=1e-14)
+    u[idof] = sol.u #A[idof,idof]\b[idof]
     return u
 end
 
 
-function poisson_rectangle(a,b,h,f)
-    mesh   = rectangular_mesh(a,b,h)
-    bd     = BasisDict()
-    compute_pT!(mesh,bd)
-    compute_dof!(mesh,bd)
-    SD     = MatrixDict()
-    for p in mesh.pE
-        SD[p] = compute_hat_stiff(bd[p])
-    end
-    S      = compute_stiff(mesh,SD)
-end
 
-function laplacian_rectangle(a,b,h,p,f;method=:inexact)
-    mesh       = rectangular_mesh(a,b,h)
-    dof,dofT,ndof   = dof_by_triangle_eq(mesh,p)
-    idof       = dof_interior(dof,a,b)
-    S          = global_stiff_eq(mesh,p,dofT)[idof,idof]
-    b          = global_rhs_eq(mesh,p,dof,dofT,f)[idof]
-    u          = zeros(length(dof))
-    perm       = 1:length(b)#symrcm(S)
-    iperm      = 1:length(b)#symrcm(S,true,true)
-    linprob    = LinearProblem(S[perm,perm],Array(b)[perm],alias_A=true,alias_b=true)
-    init(linprob)
-    sol        = solve(linprob)
-    u[idof]   .= sol.u[iperm]
-    
-    #u[idof]    .= cg(S[idof,idof],b[idof],rtol=1e-15,atol=1e-15)[1]
-    return mesh,dofT,dof,ndof,u
-    #show_sol(dof,ndof,u)
-end;
-
-function error_L²(mesh::MeshHP,bd::BasisDict,u::Vector{Float64},sol::Function)
-    (;P,T,pT,pE,Da) = mesh
-    pmax  = maximum(pE)
+function error_L²(prob::ConstantCoeffProblem,u::Vector{Float64},sol::Function)
+    (;Ω,bd) = prob
+    (;points,trilist,edgelist) = Ω
+    pmax  = maximum(degree.(edgelist))
     sch   = grundmann_moeller(Float64,Val(2),4pmax+1)
-    t̂     = [[-1.,-1.],[1.,-1.],[-1.,1.]]
+    t̂     = [[-1.,1.],[-1.,-1.],[1.,-1.]]
     err   = 0.
     Aₜ    = MMatrix{2,2}(zeros(2,2))
     bₜ    = MVector{2}(zeros(2))
-    @inbounds for k in 1:size(T,2)
-        p      = NTuple{3,Int8}(pT[:,k])
-        t      = view(T,:,k)
-        Aₜ    .= transform_matrix(P,t) 
-        bₜ    .= transform_term(P,t)
+    dof   = degrees_of_freedom(Ω)
+    @inbounds for t in triangles(trilist)
+        p,pnod    = pnodes(t,Ω)
+        transform_matrix!(Aₜ,view(points,:,pnod)) 
+        transform_term!(bₜ,view(points,:,pnod))
         dAₜ    = abs(det(Aₜ))
-        B      = bd[p]
-        (;b,C) = B
-        U(x)   = u[Da[k]]⋅(C'*[φ(x) for φ in b])
+        (;b,C) = bd[p]
+        U(x)   = u[dof[t]]⋅(C'*[φ(x) for φ in b])
         err += dAₜ*integrate(x->(U(x)-sol(Aₜ*x+bₜ))^2,sch,t̂)  
     end
     √err

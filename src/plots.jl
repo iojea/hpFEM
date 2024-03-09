@@ -7,6 +7,7 @@
             )
 end
 
+
 function Makie.plot!(p::PlotMeshHP)
     (;mesh) = p
     lift(p[1]) do mesh
@@ -18,9 +19,10 @@ function Makie.plot!(p::PlotMeshHP)
     greentris = filter(isgreen,trilist)
     bluetris  = filter(isblue,trilist)
     redtris   = filter(isred,trilist)
+    ∂cols     = Dict(0=>:white,1=>:cornflowerblue,2=>:seagreen,3=>:orange)
     if !isempty(noreftris)
         noref = hcat([Vector(nodes(t)) for t in triangles(noreftris)]...)'
-        poly!(p,points',noref,color=:gray,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
+        poly!(p,points',noref,color=:gray,strokecolor=:white,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
     if !isempty(greentris)
         green = hcat([Vector(nodes(t)) for t in triangles(greentris)]...)'
@@ -34,11 +36,13 @@ function Makie.plot!(p::PlotMeshHP)
         red   = hcat([Vector(nodes(t)) for t in triangles(redtris)]...)'
         poly!(p,points',red,color=:tomato,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
+    
 
     for e in edges(edgelist)
         x = Vector(points[1,nodes(e)])
         y = Vector(points[2,nodes(e)])
-        lines!(p,x,y,linewidth=p[:linewidth][],color= begin ismarked(edgelist[e]) ? :black : :white end)
+        lw = ismarked(edgelist[e]) ? p[:linewidth][] : 2p[:linewidth][]
+        lines!(p,x,y,linewidth=lw,color= ∂cols[marker(edgelist[e])])
     end
     if p[:annotate][]
         for (i,dot) in enumerate(eachcol(points))

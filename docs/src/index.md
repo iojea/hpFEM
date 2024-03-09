@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = FEMhp
+CurrentModule = hpFEM
 ```
 
-# FEMhp
+# hpFEM
 
-Documentation for [FEMhp](https://github.com/iojea/FEMhp.jl).
+Documentation for [hpFEM](https://github.com/iojea/hpFEM.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [FEMhp]
+Modules = [hpFEM]
 ```

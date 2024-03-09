@@ -1,12 +1,3 @@
-# struct SeenEdge{I<:Integer}
-#     nodes::SVector{2,I}
-#     index::I #stores the index of the node generated when bisecting the edge 
-# end
-# SeenEdge(v::SVector{2,I},i::J) where {I<:Integer,J<:Integer} = SeenEdge(v,convert(I,i))
-# @inline Base.hash(sedge::SeenEdge) = hash(sedge.nodes)
-# @inline Base.isequal(v::SVector{2,I},se::SeenEdge{I}) where I<:Integer = isequal(v,se.nodes) || isequal(reverse(v),se.nodes)
-# @inline Base.isequal(se::SeenEdge{I},v::SVector{2,I}) where I<:Integer = isequal(v,se)
-
 struct RefAux{I<:Integer,P<:Integer}
     i::Ref{I}
     degs::MVector{6,P}

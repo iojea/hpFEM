@@ -48,7 +48,7 @@ Basis(t::DegTuple) = Basis(t...)
 
 Defines a dictionary with an `NTuple{3,Int}` containing the vals `(p₁,p₂,p₃)` as key and a `Basis` as value. 
 """
-const BasisDict{I} = Dictionary{DegTuple{I},Basis}
+const BasisDict{P} = Dictionary{DegTuple{P},Basis}
 
 
 """
