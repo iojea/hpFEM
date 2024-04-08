@@ -1,8 +1,7 @@
-# FEMhp
 
 <p align="center">
     <img width="200px" src="https://github.com/iojea/hpFEM/blob/main/src/logo/logo.png"/>
-    
+    # hpFEM
 </p> 
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://iojea.github.io/FEMhp.jl/stable/)
