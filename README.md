@@ -1,7 +1,7 @@
 # FEMhp
 
 <p align="center">
-    <img width="200px" src="https://github.com/iojea/hpFEM/tree/main/logo/logo.png"/>
+    <img width="200px" src="https://github.com/iojea/hpFEM/tree/main/src/logo/logo.png"/>
 </p> 
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://iojea.github.io/FEMhp.jl/stable/)
