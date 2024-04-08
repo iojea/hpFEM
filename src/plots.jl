@@ -26,15 +26,15 @@ function Makie.plot!(p::PlotMeshHP)
     end
     if !isempty(greentris)
         green = hcat([Vector(nodes(t)) for t in triangles(greentris)]...)'
-        poly!(p,points',green,color=:olivedrab,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
+        poly!(p,points',green,color=:forestgreen,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
     end
     if !isempty(bluetris)
         blue  = hcat([Vector(nodes(t)) for t in triangles(bluetris)]...)'
-        poly!(p,points',blue,color=:dodgerblue,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
+        poly!(p,points',blue,color=:royalblue,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
     end
     if !isempty(redtris)
         red   = hcat([Vector(nodes(t)) for t in triangles(redtris)]...)'
-        poly!(p,points',red,color=:tomato,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
+        poly!(p,points',red,color=:brown3,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
     
 
