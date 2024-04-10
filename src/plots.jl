@@ -50,6 +50,7 @@ function Makie.plot!(p::PlotMeshHP)
         end
     end
     end
+    hidedecorations!(p.axis)
     return p
 end
 
