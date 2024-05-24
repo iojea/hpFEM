@@ -1,10 +1,10 @@
-struct DegTuple{I} <: HPTuple{3,I} 
-    degs::SVector{3,I}
-end
-DegTuple(v::Vector) = DegTuple(SVector{3}(v))
-DegTuple{I}(v::Vector) where I = DegTuple(SVector{3,I}(v))
-DegTuple(p₁,p₂,p₃) = DegTuple(SVector{3}([p₁,p₂,p₃]))
-DegTuple{I}(p₁,p₂,p₃) where I = DegTuple(SVector{3,I}([p₁,p₂,p₃]))
+# struct DegTuple{I} <: HPTuple{3,I} 
+#     degs::SVector{3,I}
+# end
+# DegTuple(v::Vector) = DegTuple(SVector{3}(v))
+# DegTuple{I}(v::Vector) where I = DegTuple(SVector{3,I}(v))
+# DegTuple(p₁,p₂,p₃) = DegTuple(SVector{3}([p₁,p₂,p₃]))
+# DegTuple{I}(p₁,p₂,p₃) where I = DegTuple(SVector{3,I}([p₁,p₂,p₃]))
 
 
 vals(d::DegTuple) = d.degs

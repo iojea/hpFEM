@@ -19,9 +19,8 @@ function degrees_of_freedom_by_edge(mesh::MeshHP{F,I,P}) where {F<:AbstractFloat
     by_edge  = similar(mesh.edgelist,Vector{I})
     i        = size(mesh.points,2)+1
     for edge in edges(edgelist)
-        nod  = nodes(edge)
         med  = collect(i:i+degree(edgelist[edge])-2)
-        set!(by_edge,edge,[nod[1],med...,nod[2]])
+        set!(by_edge,edge,[edge[1],med...,edge[2]])
         i   += degree(edgelist[edge])-1
     end
     return by_edge

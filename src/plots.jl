@@ -21,26 +21,26 @@ function Makie.plot!(p::PlotMeshHP)
     redtris   = filter(isred,trilist)
     ∂cols     = Dict(0=>:white,1=>:cornflowerblue,2=>:seagreen,3=>:orange)
     if !isempty(noreftris)
-        noref = hcat([Vector(nodes(t)) for t in triangles(noreftris)]...)'
+        noref = hcat([Vector(t) for t in triangles(noreftris)]...)'
         poly!(p,points',noref,color=:gray,strokecolor=:white,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
     if !isempty(greentris)
-        green = hcat([Vector(nodes(t)) for t in triangles(greentris)]...)'
+        green = hcat([Vector(t) for t in triangles(greentris)]...)'
         poly!(p,points',green,color=:forestgreen,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
     end
     if !isempty(bluetris)
-        blue  = hcat([Vector(nodes(t)) for t in triangles(bluetris)]...)'
+        blue  = hcat([Vector(t) for t in triangles(bluetris)]...)'
         poly!(p,points',blue,color=:royalblue,strokewidth=-0.75,overdraw=false)#,strokecolor=:lightgray,strokewidth=0.25)
     end
     if !isempty(redtris)
-        red   = hcat([Vector(nodes(t)) for t in triangles(redtris)]...)'
+        red   = hcat([Vector(t) for t in triangles(redtris)]...)'
         poly!(p,points',red,color=:brown3,strokewidth=-0.75,overdraw=false)#,strokecolor=:white,strokewidth=0.25)
     end
     
 
     for e in edges(edgelist)
-        x = Vector(points[1,nodes(e)])
-        y = Vector(points[2,nodes(e)])
+        x = Vector(points[1,e])
+        y = Vector(points[2,e])
         lw = ismarked(edgelist[e]) ? p[:linewidth][] : 2p[:linewidth][]
         lines!(p,x,y,linewidth=lw,color= ∂cols[marker(edgelist[e])])
     end
@@ -50,7 +50,7 @@ function Makie.plot!(p::PlotMeshHP)
         end
     end
     end
-    hidedecorations!(p.axis)
+    hidedecorations!(p)
     return p
 end
 
@@ -85,9 +85,8 @@ function plot_degs(mesh::MeshHP)
     f = Figure()
     Axis(f[1,1])
     for e in edgelist
-        nod = nodes(e)
-        x = Vector(points[1,nod])
-        y = Vector(points[2,nod])
+        x = Vector(points[1,e])
+        y = Vector(points[2,e])
         lines!(x,y,overdraw=true,linewidth=1,color=pal[degree(e)])
     end
     f

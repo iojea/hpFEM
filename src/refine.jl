@@ -84,7 +84,7 @@ end
 function refine_red!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
     (;points,edgelist,trilist) = mesh
     (;i,degs,dots,seen) = refaux
-    dots[1:3] .= nodes(t)
+    dots[1:3] .= t
     t_edges    = edges(t) 
     degs[1:3] .= [degree(edgelist[e]) for e in t_edges]
     degs[4:6] .= degs[1:3]-degs[[3,1,2]] |> x->max.(abs.(x),1)
@@ -115,8 +115,8 @@ end
 function refine_blue!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
     (;points,edgelist,trilist) = mesh
     (;i,degs,dots,seen) = refaux
-    dots[1:3] = nodes(t)
-    t_edges   = edges(t)
+    dots[1:3] .= t
+    t_edges    = edges(t)
     degs[1:3] .= [degree(edgelist[e]) for e in t_edges]
     degs[4]    = max(1,abs(degs[1]-degs[2]),abs(degs[1]-degs[3]))
     if ismarked(edgelist[t_edges[2]])
@@ -170,7 +170,7 @@ end
 function refine_green!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
     (;points,edgelist,trilist) = mesh
     (;i,degs,dots,seen) = refaux
-    dots[1:3] = nodes(t)
+    dots[1:3] .= t
     edge = longestedge(t)
     degs[1:3] .= [degree(edgelist[e]) for e in edges(t)]
     degs[4]   = max(1,abs(degs[1]-degs[2]),abs(degs[1]-degs[3]))

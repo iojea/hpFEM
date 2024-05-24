@@ -39,11 +39,15 @@ end
 @inline edges(mesh::T) where T<:MeshHP = keys(mesh.edgelist)
 @inline triangles(mesh::T) where T<:MeshHP = keys(mesh.trilist) 
 
+"""
+    same_order(e::EdgeHP{I},elist::EdgeList{I})
 
+Checks if 'e' is stored as presented or in reverse order. 
+"""
 function same_order(e::EdgeHP{I},elist::EdgeList{I}) where I
     _,(_,k) = gettoken(elist,e)
     oe      = gettokenvalue(keys(elist),k)
-    nodes(oe) == nodes(e)
+    oe == e
 end
 
 
@@ -67,6 +71,7 @@ function pedges(t::TriangleHP{I},mesh::MeshHP{F,I,P}) where {F,I,P}
     #DegTuple(p[pind]),eds[pind] 
     p,eds
 end
+
 
 function pnodes(t::TriangleHP{I},mesh::MeshHP{F,I,P}) where {F,I,P}
     (;edgelist) = mesh
@@ -100,7 +105,7 @@ function correct_boundary_circular(mesh::MeshHP)
     (;points,edgelist) = mesh
     for e in keys(edgelist)
         if marker(edgelist[e])==1
-            i,j = nodes(e)
+            i,j = e
             points[:,i] .= points[:,i]/norm(points[:,i])
             points[:,j] .= points[:,j]/norm(points[:,j])
         end

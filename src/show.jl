@@ -1,6 +1,6 @@
 # Show TriangleHP
-Base.show(io::IO,mime::MIME"text/plain",t::TriangleHP) = show(io,mime,Int.(t.nodes))
-Base.show(io::IO,t::TriangleHP) = show(io,Int.(t.nodes))
+# Base.show(io::IO,mime::MIME"text/plain",t::TriangleHP) = show(io,mime,Int.(t))
+# Base.show(io::IO,t::TriangleHP) = show(io,Int.(t))
 
 #Show TriangleProperties
 function Base.show(io::IO,mime::MIME"text/plain",t::TriangleProperties) 
@@ -13,8 +13,8 @@ function Base.show(io::IO,t::TriangleProperties)
 end
 
 # Show EdgeHP
-Base.show(io::IO,mime::MIME"text/plain",t::EdgeHP) = show(io,mime,Int.(t.nodes))
-Base.show(io::IO,t::EdgeHP) = show(io,Int.(t.nodes[:]))
+# Base.show(io::IO,mime::MIME"text/plain",t::EdgeHP) = show(io,mime,Int.(t))
+# Base.show(io::IO,t::EdgeHP) = show(io,Int.(t.nodes[:]))
 
 # Show EdgeProperties
 function Base.show(io::IO,mime::MIME"text/plain",t::EdgeProperties) 

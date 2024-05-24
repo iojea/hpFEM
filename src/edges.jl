@@ -1,21 +1,20 @@
 # EDGES
-struct EdgeHP{I} <: HPTuple{2,I}
-    nodes::SVector{2,I}
-    function EdgeHP(v::SVector{2,I}) where I<:Integer
-        if v[1]==v[2]
-            throw("The vertices of an edge must be different. Repeated indices were passed.")
-        else 
-            new{eltype(v)}(v)
-        end
-    end
-end
-EdgeHP(v) = EdgeHP(SVector{2}(v))
-EdgeHP{I}(v) where I<:Integer = EdgeHP(SVector{2,I}(v))
-EdgeHP(a,b) = EdgeHP(SVector{2}([a,b]))
-EdgeHP{I}(a,b) where I<:Integer = EdgeHP{I}(SVector{2,I}([a,b]))
-@inline vals(t::EdgeHP) = t.nodes
-@inline nodes(t::EdgeHP)  = t.nodes
-
+# struct EdgeHP{I} <: HPTuple{2,I}
+#     nodes::SVector{2,I}
+#     function EdgeHP(v::SVector{2,I}) where I<:Integer
+#         if v[1]==v[2]
+#             throw("The vertices of an edge must be different. Repeated indices were passed.")
+#         else 
+#             new{eltype(v)}(v)
+#         end
+#     end
+# end
+# EdgeHP(v) = EdgeHP(SVector{2}(v))
+# EdgeHP{I}(v) where I<:Integer = EdgeHP(SVector{2,I}(v))
+# EdgeHP(a,b) = EdgeHP(SVector{2}([a,b]))
+# EdgeHP{I}(a,b) where I<:Integer = EdgeHP{I}(SVector{2,I}([a,b]))
+# @inline vals(t::EdgeHP) = t.nodes
+# @inline nodes(t::EdgeHP)  = t.nodes
 
 
 struct EdgeProperties{P<:Integer,Bool} 

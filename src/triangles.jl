@@ -1,23 +1,23 @@
 # TRIANGLES
-struct TriangleHP{I} <: HPTuple{3,I}
-    nodes::SVector{3,I}
-    function TriangleHP(v::SVector{3,I}) where I<:Integer
-        if v[1]==v[2] || v[2] == v[3] || v[1]==v[3]
-            throw("The vertices of a triangle must be different. Repeated indices were passed.")
-        else 
-            new{eltype(v)}(v)
-        end
-    end
-end
-TriangleHP(v) = TriangleHP(SVector{3}(v))
-TriangleHP{I}(v) where I<:Integer = TriangleHP(SVector{3,I}(v))
-TriangleHP(a,b,c) = TriangleHP(SVector{3}([a,b,c]))
-TriangleHP{I}(a,b,c) where I<:Integer = TriangleHP{I}(SVector{3,I}([a,b,c]))
-@inline _eval(t::TriangleHP,k) = t[mod1(k,3)]
+# struct TriangleHP{I} <: HPTuple{3,I}
+#     nodes::SVector{3,I}
+#     function TriangleHP(v::SVector{3,I}) where I<:Integer
+#         if v[1]==v[2] || v[2] == v[3] || v[1]==v[3]
+#             throw("The vertices of a triangle must be different. Repeated indices were passed.")
+#         else 
+#             new{eltype(v)}(v)
+#         end
+#     end
+# end
+# TriangleHP(v) = TriangleHP(SVector{3}(v))
+# TriangleHP{I}(v) where I<:Integer = TriangleHP(SVector{3,I}(v))
+# TriangleHP(a,b,c) = TriangleHP(SVector{3}([a,b,c]))
+# TriangleHP{I}(a,b,c) where I<:Integer = TriangleHP{I}(SVector{3,I}([a,b,c]))
+ @inline _eval(t::TriangleHP,k) = t[mod1(k,3)]
 @inline edges(t::TriangleHP)   = [EdgeHP(_eval(t,i),_eval(t,i+1)) for i in 1:3]
-@inline longestedge(t::TriangleHP) = EdgeHP(_eval(t,1),_eval(t,2))
-@inline vals(t::TriangleHP{I}) where I = t.nodes
-@inline nodes(t::TriangleHP)  = t.nodes
+ @inline longestedge(t::TriangleHP) = EdgeHP(_eval(t,1),_eval(t,2))
+# @inline vals(t::TriangleHP{I}) where I = t.nodes
+# @inline nodes(t::TriangleHP)  = t.nodes
 
 #const TriangleHP{I} = SVector{3,I} where I<:Integer
 
@@ -40,6 +40,6 @@ TriangleProperties{P}(tp::TriangleProperties) where P<:Integer = TrianglePropert
 
 function triangle(t::T,p::AbstractMatrix) where {T<:Union{Tuple,AbstractArray}}
     maxi = argmax(norm(p[:,t[mod1(i+1,3)]]-p[:,t[i]]) for i in 1:3)
-    TriangleHP(t[mod1.(maxi:maxi+2,3)])
+    TriangleHP{eltype(t)}(t[mod1.(maxi:maxi+2,3)])
 end
 
