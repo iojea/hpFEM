@@ -61,11 +61,43 @@ function Base.hash(s::TupleHP, h::UInt)
     hash(hash(hv, h),hash(typeof(s)))
 end
 
-# Base.:(==)(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && t1⊆t2
 Base.isequal(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && issubset(t1,t2)
 
-const DegTuple{I} = TupleHP{3,I}
 
+####################
+struct DegTuple{I<:Integer} <: StaticArray{Tuple{3},I, 1}
+    data::NTuple{3,I}
+
+    # function TupleHP{I}(x::NTuple{3,I}) where {I<:Integer}
+    #     check_array_parameters(Tuple{3},I,Val{1},Val{3})
+    #     new{I}(x)
+    # end
+
+    # function TupleHP{I}(x::NTuple{3,Any}) where {I}
+    #     check_array_parameters(Tuple{3}, I, Val{1}, Val{3})
+    #     new{I}(convert_ntuple(I, x))
+    # end
+end
+
+
+# @inline DegTuple{I}(x::Tuple) where I<:Integer = DegTuple(convert_ntuple(I,x))
+#@inline DegTuple(x::Tuple) = DegTuple{eltype(x)}(x)
+
+@propagate_inbounds function getindex(v::DegTuple, i::Int)
+    getfield(v,:data)[i]
+end
+
+
+function Base.hash(s::DegTuple, h::UInt)
+    hv = hashs_seed
+    for x in getfield(s,:data)
+        hv ⊻= hash(x)
+    end
+    hash(hash(hv, h),hash(typeof(s)))
+end
+
+# Base.:(==)(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && t1⊆t2
+Base.isequal(t1::T,t2::T) where T<:DegTuple = length(t1)==length(t2) && issubset(t1,t2)
 
 # Base.issubset(t1::T,t2::T) where T<:TupleHP = vals(t1) ⊆ vals(t2)
 

@@ -33,13 +33,18 @@ function Base.show(io::IO,t::EdgeProperties)
     if t.marker==0
         m = :Ω°
     elseif t.marker==1
-        m = :ΓD
+        m = :Γ𝔇
     elseif t.marker==2
-        m = :ΓN
+        m = :Γ𝔫
     else 
         m = t.marker
     end 
-    show(io,(t.degree[],m,t.refine[]))
+    if t.refine[]
+        r = :refine
+    else
+        r = :noref
+    end
+    show(io,(t.degree[],m,r))
 end
 
 # Show HPList short.
@@ -206,12 +211,18 @@ function Base.show(io::IO,mime::MIME"text/plain",mesh::MeshHP{I,P}) where {I,P}
         + $(length(mesh.edgelist)) edges.
     """)
     show(io,mime,header)
+    println(io)
     show(io,mime,mesh.points)
+    println(io)
     println(io)
     show(io,mime,mesh.trilist)
     println(io)
+    println(io)
+    println(io)
     show(io,mime,mesh.edgelist)
 end
+
+
 function Base.show(io::IO,mesh::MeshHP)
     println(io,)
     show(io,mesh.points)

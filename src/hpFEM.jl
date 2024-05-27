@@ -22,7 +22,7 @@ include("matrices.jl")
 include("estimates.jl")
 include("solvers.jl")
 
-export TupleHP,TriangleHP, EdgeHP, MeshHP, EdgeProperties
+export TupleHP,TriangleHP, EdgeHP, MeshHP, EdgeProperties,DegTuple
 export edges, degree, marker, mark!, setdegree!, longestedge
 export circmesh, circmesh_graded_center, mark!, estim_distance_origin, rectmesh, l_mesh, l_graded,triangle
 export normals,in
@@ -30,5 +30,6 @@ export rhs, mass, stiff
 export ConstantCoeff, BoundaryConditions, ConstantCoeffProblem
 export find_neighbors,normals
 export plotmeshhp, plotsolhp,animate_refinement
+export basisdict
 
 end #module

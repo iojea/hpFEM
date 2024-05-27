@@ -60,7 +60,7 @@ struct ReferenceDicts{P<:Integer}
 end
 function ReferenceDicts(mesh::MeshHP{F,I,P}) where {F,I,P}
     bd  = basisdict(mesh)
-    sd  = stiffdict(mesh,bd)
+    sd  = stiffdict(bd)
     md  = massdict(mesh,bd)
     cd  = convdict(mesh,bd)
     ReferenceDicts(bd,sd,md,cd)
@@ -125,11 +125,11 @@ ConstantCoeff(α,f::U) where U<:Function = ConstantCoeff(α,convert(typeof(α),0
 ConstantCoeff(α) = ConstantCoeff(α,isequal(0))
 
 """
-   ConstantCoeffProblem 
+   ConstantCoeffProblem(mesh,α,v⃗,c,f,bc)
 
-A problem of the form 
+creates problem of the form 
     α∫∇u⋅∇ϕ + ∫v⃗⋅∇u ϕ + c∫uϕ = ∫fϕ
-where `α`, `v⃗` and `c` are constants and `f` is a given function.  
+where `mesh` is the mesh, `α`, `v⃗` and `c` are constants, `f` is a given function and `bc` are boundary conditions.  
 """
 mutable struct ConstantCoeffProblem{F<:AbstractFloat,I<:Integer,P<:Integer}
     Ω::MeshHP{F,I,P}
@@ -141,12 +141,12 @@ end
 
 #General constructor
 function ConstantCoeffProblem(Ω::MeshHP{F,I,P},α,v⃗::AbstractVector,c,f::Function,bc::BoundaryConditions)  where {F,I,P}
-    bd  = basisdict(mesh)
-    sd  = stiffdict(mesh,bd)
-    md  = c!=0 ? massdict(mesh,bd) : nothing
-    cd  = v⃗[1]!=0 || v⃗[2]!=0 ? convdict(mesh,bd) : nothing
+    bd  = basisdict(Ω)
+    sd  = stiffdict(bd)
+    md  = c!=0 ? massdict(Ω,bd) : nothing
+    cd  = v⃗[1]!=0 || v⃗[2]!=0 ? convdict(Ω,bd) : nothing
     ref = ReferenceDicts(bd,sd,md,cd)
-    dof = DegreesOfFreedom(mesh)
+    dof = DegreesOfFreedom(Ω)
     coeff = ConstantCoeff(α,SVector{2,F}(v⃗),c,convert(F,c),f)
     ConstantCoeffProblem(Ω,coeff,ref,dof,bc)
 end

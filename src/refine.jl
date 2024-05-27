@@ -39,15 +39,6 @@ function estim_distance_origin(vert;h=0.2,μ=1)
         return ℓ>1.5h*d^(1-μ) 
     end    
 end
-function estim_distance_origin_v(vert;h=0.2,μ=1)
-    ℓ = minimum(norm(vert[:,i]-vert[:,j]) for (i,j) in ((1,2),(1,3),(2,3)))
-    d = maximum(norm(v) for v in eachcol(vert))
-    if [0.,0.] in eachcol(vert)
-        return ℓ>h^(1/μ)
-    else
-        return ℓ>1.5h*d^(1-μ) 
-    end    
-end
 
 function intriangle(p::T,a::V,b::V,c::V) where {T<:AbstractArray,V<:AbstractArray}
     if abs(orient(a,b,p)+orient(b,c,p)+orient(c,a,p))==3
