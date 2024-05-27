@@ -91,3 +91,12 @@ function plot_degs(mesh::MeshHP)
     end
     f
 end
+
+function animate_refinement(meshes,path)
+    k = Observable(1)
+    msh = @lift(meshes[$k])
+    fig = plotmeshhp(msh,linewidth=0.25)
+    record(fig,path,1:length(meshes);framerate=2) do t
+        k[] = t
+    end
+end

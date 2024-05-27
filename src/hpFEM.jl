@@ -29,6 +29,6 @@ export normals,in
 export rhs, mass, stiff
 export ConstantCoeff, BoundaryConditions, ConstantCoeffProblem
 export find_neighbors,normals
-export plotmeshhp, plotsolhp
+export plotmeshhp, plotsolhp,animate_refinement
 
 end #module
