@@ -1,35 +1,32 @@
-import StaticArraysCore: check_array_parameters,convert_ntuple
-import Base: @propagate_inbounds
-import Base: getindex
 """
-    HPTuple{L,I}(x::NTuple{L}) 
-    HPTuple{L,I}(x1,x2,x3,...)
+    TupleHP{L,I}(x::NTuple{L}) 
+    TupleHP{L,I}(x1,x2,x3,...)
 
-Construct a statically-sized array `HPTuple`. The type is immutable, so the data must be provided upon construction. The `I` parameter is a type, `I<:Integer`. `L` can be inferred from the data:
+Construct a statically-sized array `TupleHP`. The type is immutable, so the data must be provided upon construction. The `I` parameter is a type, `I<:Integer`. `L` can be inferred from the data:
 
-    HPTuple{I}(x::Array)
+    TupleHP{I}(x::Array)
 
 If `I` is not provided the type of the data is inferred from `eltype(x)`:
-    HPTuple(x::Array)
+    TupleHP(x::Array)
 
-`HPTuple` is a subtype of `StaticArray`. As a consequence, an `HPTuple` can be used for indexing, slicing and Linear Algebra operations. However, and `HPTuple` behaves like a mathematical set for the purposes of hashing and equality checking via `isequal`. The goal of this implementation is to use `HPTuple`s as keys of a `Dictionary` allowing search with permutations of the `HPTuple`. 
+`TupleHP` is a subtype of `StaticArray`. As a consequence, an `TupleHP` can be used for indexing, slicing and Linear Algebra operations. However, and `TupleHP` behaves like a mathematical set for the purposes of hashing and equality checking via `isequal`. The goal of this implementation is to use `TupleHP`s as keys of a `Dictionary` allowing search with permutations of the `TupleHP`. 
 
 # Example
 ```julia
-julia> v = HPTuple(1,2);
-julia> w = HPTuple(2,1);
-julia> isequal(v,w)
-true
-julia> v==w
-false
-julia> using Dictionaries
-julia> d = Dictionary([v],[8])
-1-element Dictionary{TupleHP{Int64},Int64}
-[1, 2] | 8
-julia> w in keys(d)
-true    
-julia> d[w]
-8
+    julia> v = TupleHP(1,2);
+    julia> w = TupleHP(2,1);
+    julia> isequal(v,w)
+    true
+    julia> v==w
+    false
+    julia> using Dictionaries
+    julia> d = Dictionary([v],[8])
+    1-element Dictionary{TupleHP{Int64},Int64}
+    [1, 2] | 8
+    julia> w in keys(d)
+    true    
+    julia> d[w]
+    8
 ```
 """
 struct TupleHP{L,I<:Integer} <: StaticArray{Tuple{L},I, 1}
@@ -67,12 +64,8 @@ end
 # Base.:(==)(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && t1⊆t2
 Base.isequal(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && issubset(t1,t2)
 
-const EdgeHP{I} = TupleHP{2,I}
-const TriangleHP{I} = TupleHP{3,I} 
 const DegTuple{I} = TupleHP{3,I}
 
-TriangleHP(x) = TriangleHP{eltype(x)}(x)
-EdgeHP(x) = EdgeHP{eltype(x)}(x)
 
 # Base.issubset(t1::T,t2::T) where T<:TupleHP = vals(t1) ⊆ vals(t2)
 

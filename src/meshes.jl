@@ -1,7 +1,3 @@
-# const PairDict{T,U} = Dictionaries.PairDictionary{T,U,Dictionary{T,U}}
-# const EdgeList{I,P} = PairDict{EdgeHP{I},EdgeProperties{P,Bool}} where {I<:Integer,P<:Integer}
-# const TriangleList{I,P} = PairDict{TriangleHP{I},TriangleProperties{P}} where {I<:Integer,P<:Integer}
-
 const TriangleList{I,P} = Dictionary{TriangleHP{I},TriangleProperties{P}} where {I,P}
 const EdgeList{I,P} = Dictionary{EdgeHP{I},EdgeProperties{P,Bool}} where {I,P}
 
@@ -29,8 +25,8 @@ function MeshHP(tri::TriangulateIO)
     (;pointlist,trianglelist,edgelist,edgemarkerlist) = tri
     I = eltype(trianglelist)
     P = Int8
-    trilist = TriangleList{I,P}([triangle(t,pointlist) for t in eachcol(trianglelist)],[TriangleProperties{P}(0) for _ in 1:size(trianglelist,2)])
-    edgelist = dictionary([EdgeHP{I}(e) => EdgeProperties{P,Bool}(1,edgemarkerlist[i],false) for (i,e) in enumerate(eachcol(edgelist))] )
+    trilist = TriangleList{I,P}([triangle(t,pointlist) for t in eachcol(trianglelist)],[TriangleProperties{P}() for _ in 1:size(trianglelist,2)])
+    edgelist = dictionary([EdgeHP{I}(e) => EdgeProperties{P}(1,edgemarkerlist[i],false) for (i,e) in enumerate(eachcol(edgelist))] )
     MeshHP(pointlist,trilist,edgelist)
 end
 
@@ -94,7 +90,7 @@ function circmesh(c,r,h)
     tri = TriangulateIO(;pointlist=points,edgelist=edgelist,edgemarkerlist=marks)
     maxa = Printf.@sprintf "%.15f" h^2/2
     angle= Printf.@sprintf "%.15f" 30.
-    (tri,) = triangulate("ea$(maxa)q$(angle)Q",tri)
+    (tri,_) = triangulate("ea$(maxa)q$(angle)Q",tri)
     return MeshHP(tri)
 end;
 circmesh(r,h) = circmesh(zeros(2),r,h)
@@ -180,4 +176,61 @@ function meshhp(vertices,boundary_edges,boundary_mark,h)
     minangle = Printf.@sprintf "%0.15f" 30.
     (tri,_) = triangulate("pea$(maxarea)q$(minangle)Q",tri)
     MeshHP(tri)
+end
+
+
+function l_mesh(h)
+    x = range(start=0,stop=2,length=Int(1+2÷h))
+    x0 = range(start=0,stop=1,length=Int(1+1÷h))    
+    n = length(x)
+    n0 = length(x0)
+    y = range(start=0,stop=2,length=Int(1+2÷h))   
+    y0 = range(start=0,stop=1,length=Int(1+1÷h))        
+    m = length(y) 
+    m0 = length(y0) 
+    points   =  [-1. -1;1. -1.;1. 0.;0. 0.;0. 1;-1 1]'
+    
+    # [x fill(0,n);
+    #              fill(2,m0-2) y0[2:end-1];
+    #              reverse(x0.+1) fill(1,n0);
+    #              fill(1,n0-2) y0[2:end-1].+1;
+    #              reverse(x0) fill(2,n0);
+    #              fill(0,n-2) reverse(y[2:end-1])]'
+    edgelist = hcat([[i,i+1] for i in 1:size(points,2)-1]...,
+                          [size(points,2),1])
+    marks    = Vector{Int8}(ones(Int8,size(edgelist,2)))
+    tri = TriangulateIO(;pointlist=points,segmentlist=edgelist,segmentmarkerlist=marks)
+    maxa = Printf.@sprintf "%.15f" h^2/2
+    angle= Printf.@sprintf "%.15f" 30.
+    (tri,_) = triangulate("ea$(maxa)q$(angle)pQ",tri)
+    MeshHP(tri)
+end
+
+function estim_distance(vert,pp;h=0.2,μ=1)
+    ℓ = minimum(norm(vert[:,i]-vert[:,j]) for (i,j) in ((1,2),(1,3),(2,3)))
+    d = maximum(norm(v-pp) for v in eachcol(vert))
+    if intriangle(zeros(2),vert)≥0
+        return ℓ>h^(1/μ)
+    else
+        return ℓ>1.5h*d^(1-μ) 
+    end    
+end
+
+function l_graded(h,μ;maxiter=6,rec=false)
+    k = 0
+    mesh = l_mesh(h)
+    flag = true
+    mshs = [copy(mesh)]
+    while k≤maxiter && flag
+        mark!(estim_distance_origin_v,mesh,h=h,μ=μ)
+        rec ? push!(mshs,copy(mesh)) : nothing
+        if count(ismarked,mesh.trilist) > 0
+            refine!(mesh)
+            k += 1
+            rec ? push!(mshs,copy(mesh)) : nothing
+        else
+            flag = false
+        end
+    end
+    return rec ? mshs : mesh
 end

@@ -39,6 +39,15 @@ function estim_distance_origin(vert;h=0.2,μ=1)
         return ℓ>1.5h*d^(1-μ) 
     end    
 end
+function estim_distance_origin_v(vert;h=0.2,μ=1)
+    ℓ = minimum(norm(vert[:,i]-vert[:,j]) for (i,j) in ((1,2),(1,3),(2,3)))
+    d = maximum(norm(v) for v in eachcol(vert))
+    if [0.,0.] in eachcol(vert)
+        return ℓ>h^(1/μ)
+    else
+        return ℓ>1.5h*d^(1-μ) 
+    end    
+end
 
 function intriangle(p::T,a::V,b::V,c::V) where {T<:AbstractArray,V<:AbstractArray}
     if abs(orient(a,b,p)+orient(b,c,p)+orient(c,a,p))==3
@@ -106,10 +115,10 @@ function refine_red!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) w
     set!(edgelist,EdgeHP{I}(dots[6],dots[4]),EdgeProperties{P,Bool}(degs[4],0,false))
     set!(edgelist,EdgeHP{I}(dots[4],dots[5]),EdgeProperties{P,Bool}(degs[5],0,false))    
     set!(edgelist,EdgeHP{I}(dots[5],dots[6]),EdgeProperties{P,Bool}(degs[6],0,false))
-    set!(trilist,TriangleHP{I}(dots[[1,4,6]]),TriangleProperties{P}(0))
-    set!(trilist,TriangleHP{I}(dots[[4,2,5]]),TriangleProperties{P}(0))
-    set!(trilist,TriangleHP{I}(dots[[6,5,3]]),TriangleProperties{P}(0))
-    set!(trilist,TriangleHP{I}(dots[[5,6,4]]),TriangleProperties{P}(0))
+    set!(trilist,TriangleHP{I}(dots[[1,4,6]]),TriangleProperties{P}())
+    set!(trilist,TriangleHP{I}(dots[[4,2,5]]),TriangleProperties{P}())
+    set!(trilist,TriangleHP{I}(dots[[6,5,3]]),TriangleProperties{P}())
+    set!(trilist,TriangleHP{I}(dots[[5,6,4]]),TriangleProperties{P}())
 end
 
 function refine_blue!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
@@ -138,9 +147,9 @@ function refine_blue!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) 
         end
         set!(edgelist,EdgeHP{I}(dots[3],dots[4]),EdgeProperties{P,Bool}(degs[4],0,false))
         set!(edgelist,EdgeHP{I}(dots[5],dots[4]),EdgeProperties{P,Bool}(degs[5],0,false))    
-        set!(trilist,TriangleHP{I}(dots[[1,4,3]]),TriangleProperties{P}(0))
-        set!(trilist,TriangleHP{I}(dots[[4,2,5]]),TriangleProperties{P}(0))
-        set!(trilist,TriangleHP{I}(dots[[4,5,3]]),TriangleProperties{P}(0))
+        set!(trilist,TriangleHP{I}(dots[[1,4,3]]),TriangleProperties{P}())
+        set!(trilist,TriangleHP{I}(dots[[4,2,5]]),TriangleProperties{P}())
+        set!(trilist,TriangleHP{I}(dots[[4,5,3]]),TriangleProperties{P}())
     elseif ismarked(edgelist[t_edges[3]])
         degs[5] = max(1,abs(degs[1]-degs[3]),abs(degs[3]-degs[4]))
         for j in 0:1
@@ -160,9 +169,9 @@ function refine_blue!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P}) 
         end
         set!(edgelist,EdgeHP{I}(dots[3],dots[4]),EdgeProperties{P,Bool}(degs[4],0,false))
         set!(edgelist,EdgeHP{I}(dots[4],dots[5]),EdgeProperties{P,Bool}(degs[5],0,false))    
-        set!(trilist,TriangleHP{I}(dots[[1,4,5]]),TriangleProperties{P}(0))
-        set!(trilist,TriangleHP{I}(dots[[4,2,3]]),TriangleProperties{P}(0))
-        set!(trilist,TriangleHP{I}(dots[[4,3,5]]),TriangleProperties{P}(0))
+        set!(trilist,TriangleHP{I}(dots[[1,4,5]]),TriangleProperties{P}())
+        set!(trilist,TriangleHP{I}(dots[[4,2,3]]),TriangleProperties{P}())
+        set!(trilist,TriangleHP{I}(dots[[4,3,5]]),TriangleProperties{P}())
     end
 end
 
@@ -188,8 +197,8 @@ function refine_green!(t::TriangleHP{I},mesh::MeshHP{F,I,P},refaux::RefAux{I,P})
         i[] += 1
     end
     set!(edgelist,EdgeHP{I}(dots[3],dots[4]),EdgeProperties{P,Bool}(degs[4],0,false))
-    set!(trilist,TriangleHP{I}(dots[[1,4,3]]),TriangleProperties{P}(0))
-    set!(trilist,TriangleHP{I}(dots[[4,2,3]]),TriangleProperties{P}(0))
+    set!(trilist,TriangleHP{I}(dots[[1,4,3]]),TriangleProperties{P}())
+    set!(trilist,TriangleHP{I}(dots[[4,2,3]]),TriangleProperties{P}())
 end
 
     

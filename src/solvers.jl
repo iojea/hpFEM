@@ -1,14 +1,16 @@
 """
-    DegreesOfFreedom{I<:Integer}
+    DegreesOfFreedom(mesh::MeshHP)
 
-Structure that stores the degrees of freedom of a given mesh. Two dictionaries (from `Dictionaries.jl`) are used: 
-    + `by_edge`: its keys are the edges of the mesh and its values a vector of indices (of type `I`) for the degrees of freedom. This dictionary contains all the nodal dof.
-    + `by_tri`: similar to `by_edge`, but including the degrees of freedom corresponding to bubble functions. 
+returns a `DegreesOfFreedom{I}` structure that stores the degrees of freedom of a given mesh. Two dictionaries (from `Dictionaries.jl`) are used: 
+    + `by_edge`: the keys are the edges of the mesh and the values are vectors of indices for the degrees of freedom. This dictionary contains all the nodal dof.
+    + `by_tri`: similar to `by_edge`, but including the indices of the degrees of freedom corresponding to bubble functions. 
+The type `I<:Integer` is the type used for indexing triangles and edges in `mesh`.
 """
 mutable struct DegreesOfFreedom{I<:Integer}
     by_tri::DofDict{I}
     by_edge::EdgeDofDict{I}
 end
+
 function DegreesOfFreedom(mesh::MeshHP)
     by_edge = degrees_of_freedom_by_edge(mesh)
     by_tri  = degrees_of_freedom(mesh,by_edge)
@@ -16,11 +18,9 @@ function DegreesOfFreedom(mesh::MeshHP)
 end
 
 """
-    BoundaryConditions
-
-Structure that stores the functions corresponding to the `dirichlet` and `neumann` conditions.
     BoundaryConditions()
-sets homogeneous Dirichlet boundary conditions on the whole boundary  (`dirichlet = isequal(0)` and `neumann = nothing`). 
+
+Returns a `BoundaryConditions` structure that stores the functions corresponding to the `dirichlet` and `neumann` conditions.
 
     BoundaryConditions(f::Function)
 sets `dirichlet = f` and `neumann = nothing`.
@@ -42,9 +42,9 @@ BoundaryConditions(f::Function) = BoundaryConditions(f,nothing)
 BoundaryConditions(;dirichlet=isequal(0.),neumann=isequal(0.)) = BoundaryConditions(dirichlet,neumann)
 
 """
-    ReferenceDicts{P<:Integer}
+    ReferenceDicts(mesh)
 
-Stores dictionaries (from `Dictionaries.jl`) containing information computed on the reference triangle `T̂`, with vertices `[-1,1]`, `[-1,-1]` and `[1,-1]`. All dictionaries have keys given by `DegTuple`s corresponding to the combinations of degrees `(p₁,p₂,p₃)` that are present in a given mesh.  `P` is the type of the degrees. 
+Returns a `ReferenceDicts` structure that stores dictionaries (from `Dictionaries.jl`) containing information computed on the reference triangle `T̂`, with vertices `[-1,1]`, `[-1,-1]` and `[1,-1]`. All dictionaries have keys given by `DegTuple`s corresponding to the combinations of degrees `(p₁,p₂,p₃)` that are present in a given mesh.  `P` is the type of the degrees. 
 The dictionaries are: 
     + `basisref`: stores the al the information corresponding to the local basis and its gradientes.
     + `stiffref`: stores integrals of the form `∫∇Φᵢ∇ΦⱼdT̂` that are used for the assembly of the stiff matrix. 
@@ -66,6 +66,12 @@ function ReferenceDicts(mesh::MeshHP{F,I,P}) where {F,I,P}
     ReferenceDicts(bd,sd,md,cd)
 end
 
+
+"""
+    update!(ref::ReferenceDicts,mesh)
+
+updates the dictionaries stored in `ref` according to the new information present in `mesh`. In particular, if a new `DegTuple` appear in `mesh` after `p`-refinement, `update!` will compute all the relevant information for computing and assembling matrices accordingly. 
+"""
 function update!(ref::ReferenceDicts,mesh)
     (;bd,sd,md,cd) = ref
     update!(bd,mesh)
@@ -165,7 +171,6 @@ end
 
 
 
-
 function CommonSolve.solve(prob::ConstantCoeffProblem)
     (;Ω,coeff,ref,dof,bc) = prob
     (;α,v⃗,c,f) = coeff
@@ -190,65 +195,65 @@ end
 
 
 
-function error_L²(prob::ConstantCoeffProblem,u::Vector{Float64},sol::Function)
-    (;Ω,bd) = prob
-    (;points,trilist,edgelist) = Ω
-    pmax  = maximum(degree.(edgelist))
-    sch   = grundmann_moeller(Float64,Val(2),4pmax+1)
-    t̂     = [[-1.,1.],[-1.,-1.],[1.,-1.]]
-    err   = 0.
-    Aₜ    = MMatrix{2,2}(zeros(2,2))
-    bₜ    = MVector{2}(zeros(2))
-    dof   = degrees_of_freedom(Ω)
-    @inbounds for t in triangles(trilist)
-        p,pnod    = pnodes(t,Ω)
-        transform_matrix!(Aₜ,view(points,:,pnod)) 
-        transform_term!(bₜ,view(points,:,pnod))
-        dAₜ    = abs(det(Aₜ))
-        (;b,C) = bd[p]
-        U(x)   = u[dof[t]]⋅(C'*[φ(x) for φ in b])
-        err += dAₜ*integrate(x->(U(x)-sol(Aₜ*x+bₜ))^2,sch,t̂)  
-    end
-    √err
-end
+# function error_L²(prob::ConstantCoeffProblem,u::Vector{Float64},sol::Function)
+#     (;Ω,bd) = prob
+#     (;points,trilist,edgelist) = Ω
+#     pmax  = maximum(degree.(edgelist))
+#     sch   = grundmann_moeller(Float64,Val(2),4pmax+1)
+#     t̂     = [[-1.,1.],[-1.,-1.],[1.,-1.]]
+#     err   = 0.
+#     Aₜ    = MMatrix{2,2}(zeros(2,2))
+#     bₜ    = MVector{2}(zeros(2))
+#     dof   = degrees_of_freedom(Ω)
+#     @inbounds for t in triangles(trilist)
+#         p,pnod    = pnodes(t,Ω)
+#         transform_matrix!(Aₜ,view(points,:,pnod)) 
+#         transform_term!(bₜ,view(points,:,pnod))
+#         dAₜ    = abs(det(Aₜ))
+#         (;b,C) = bd[p]
+#         U(x)   = u[dof[t]]⋅(C'*[φ(x) for φ in b])
+#         err += dAₜ*integrate(x->(U(x)-sol(Aₜ*x+bₜ))^2,sch,t̂)  
+#     end
+#     √err
+# end
 
-function error_L²_eq(u,dof,dof_T,p,sol)
-    #sch   = grundmann_moeller(Float64,Val(2),4p+1)
-    B     = standard_basis(p)
-    T̂     = SMatrix{3,2,Float64}([-1 -1;1 -1;-1 1])
-    X,W   = simplexquad(4p,T̂)
-    X    = [X[i,:] for i in 1:size(X,1)]
-    nodes = boundary_nodes(p)
-    C     = matrix_C(B,nodes)
-    error = 0.
-    Aₜ     = MMatrix{2,2}(zeros(2,2))
-    bₜ     = MVector{2}(zeros(2))
-    for t in dof_T
-        T    = dof[[t[1],t[p+1],t[2p+1]]]
-        Aₜ   .= 0.5*[T[2]-T[1] T[3]-T[1]] 
-        bₜ   .= (T[2]+T[3])/2
-        dAₜ   = abs(det(Aₜ))
-        U(x) = u[t]⋅(C'*[B[j](x) for j in 1:length(t)])
-        #error += dAₜ*integrate(x->(U(x)-sol(Aₜ*x+bₜ))^2,sch,T̂')
-        error += dAₜ*integral(x->(U(x)-sol(Aₜ*x+bₜ))^2,X,W)
-    end
-    return √error
-end;
+# function error_L²_eq(u,dof,dof_T,p,sol)
+#     #sch   = grundmann_moeller(Float64,Val(2),4p+1)
+#     B     = standard_basis(p)
+#     T̂     = SMatrix{3,2,Float64}([-1 -1;1 -1;-1 1])
+#     X,W   = simplexquad(4p,T̂)
+#     X    = [X[i,:] for i in 1:size(X,1)]
+#     nodes = boundary_nodes(p)
+#     C     = matrix_C(B,nodes)
+#     error = 0.
+#     Aₜ     = MMatrix{2,2}(zeros(2,2))
+#     bₜ     = MVector{2}(zeros(2))
+#     for t in dof_T
+#         T    = dof[[t[1],t[p+1],t[2p+1]]]
+#         Aₜ   .= 0.5*[T[2]-T[1] T[3]-T[1]] 
+#         bₜ   .= (T[2]+T[3])/2
+#         dAₜ   = abs(det(Aₜ))
+#         U(x) = u[t]⋅(C'*[B[j](x) for j in 1:length(t)])
+#         #error += dAₜ*integrate(x->(U(x)-sol(Aₜ*x+bₜ))^2,sch,T̂')
+#         error += dAₜ*integral(x->(U(x)-sol(Aₜ*x+bₜ))^2,X,W)
+#     end
+#     return √error
+# end;
 
 
-function eigenvalues_rectangle(a,b,h₁,h₂,p,nv)
-    (mesh,vor)    = rectangle_mesh(a,b,h₁,h₂)
-    dof,dofT,ndof = dof_by_triangle_eq(mesh,p)
-    idof          = .!boundary_dof_rectangle(a,b,dof)
-    S             = global_stiff_eq(mesh,p,dofT)
-    M             = global_mass_eq(mesh,p,dofT)
-    λ,x,info      = geneigsolve((-S[idof,idof],-M[idof,idof]),howmany=nv,which=:SR,issymetric=true,isposdef=true)
-    u             = zeros(length(dof),nv)
-    u[idof,:]     .= x
-    return mesh,dof,ndof,λ,u
-end;
+# function eigenvalues_rectangle(a,b,h₁,h₂,p,nv)
+#     (mesh,vor)    = rectangle_mesh(a,b,h₁,h₂)
+#     dof,dofT,ndof = dof_by_triangle_eq(mesh,p)
+#     idof          = .!boundary_dof_rectangle(a,b,dof)
+#     S             = global_stiff_eq(mesh,p,dofT)
+#     M             = global_mass_eq(mesh,p,dofT)
+#     λ,x,info      = geneigsolve((-S[idof,idof],-M[idof,idof]),howmany=nv,which=:SR,issymetric=true,isposdef=true)
+#     u             = zeros(length(dof),nv)
+#     u[idof,:]     .= x
+#     return mesh,dof,ndof,λ,u
+# end;
 
-function show_sol(dof,ndof,z)
-    X = hcat(dof[ndof]...)
-    return surface(X[1,:],X[2,:],z[ndof])
-end;
+# function show_sol(dof,ndof,z)
+#     X = hcat(dof[ndof]...)
+#     return surface(X[1,:],X[2,:],z[ndof])
+# end;

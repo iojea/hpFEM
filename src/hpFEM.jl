@@ -6,7 +6,7 @@ using Triangulate, Printf, ElasticArrays, ExactPredicates, ElasticArrays
 using CommonSolve, CuthillMcKee, LegendrePolynomials, GrundmannMoeller
 using LinearSolve, Makie, ColorSchemes
 
-import Base: @propagate_inbounds, getindex, isequal, hash, show, copy
+import Base: @propagate_inbounds, getindex, isequal, in, hash, show, copy
 import StaticArraysCore: check_array_parameters,convert_ntuple
 
 
@@ -19,13 +19,16 @@ include("refine.jl")
 include("plots.jl")
 include("basis.jl")
 include("matrices.jl")
+include("estimates.jl")
 include("solvers.jl")
 
-export TupleHP,TriangleHP, EdgeHP, MeshHP
-export edges, nodes, degree, marker, mark!, setdegree!, longestedge
-export circmesh, circmesh_graded_center, mark!, estim_distance_origin, rectmesh,triangle
+export TupleHP,TriangleHP, EdgeHP, MeshHP, EdgeProperties
+export edges, degree, marker, mark!, setdegree!, longestedge
+export circmesh, circmesh_graded_center, mark!, estim_distance_origin, rectmesh, l_mesh, l_graded,triangle
+export normals,in
 export rhs, mass, stiff
 export ConstantCoeff, BoundaryConditions, ConstantCoeffProblem
+export find_neighbors,normals
 export plotmeshhp, plotsolhp
 
-end
+end #module

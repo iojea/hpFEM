@@ -1,6 +1,5 @@
 """ 
     `MatrixDict` and `ArrayDict` are unused, yet. The idea is to store the local mass and stiff matrices for each combination of values of `p`.
-using Base: io_has_tvar_name
 """ 
 
 const MatrixDict{P} = Dictionary{DegTuple{P},SMatrix{Float64}}
@@ -43,7 +42,7 @@ function degrees_of_freedom(mesh::MeshHP{F,I,P}) where {F,I,P}
 end
 function degrees_of_freedom(mesh::MeshHP{F,I,P},by_edge::Dictionary{EdgeHP{I},Vector{I}}) where {F,I,P}
     (;edgelist,trilist) = mesh
-    dof     = similar(mesh.trilist,Vector{I})
+    dof     = similar(trilist,Vector{I})
     k       = maximum(maximum.(by_edge))+1 #first non-edge dof
     for t in triangles(trilist)
         p,t_edges = pedges(t,mesh)
@@ -164,7 +163,7 @@ end;
 
 """
     hat_conv(base::Basis)
-computes the matrix corresponding    ᵢ`
+computes the matrix corresponding  
 """
 function hat_conv(base::Basis)
     (;dim,b,∇b) = base

@@ -1,7 +1,7 @@
 
 @recipe(PlotMeshHP, mesh) do scene
     Attributes(
-               linewidth = 1.5,
+               linewidth = 0.5,
                annotate  = false,
                title = "",
             )
@@ -50,7 +50,7 @@ function Makie.plot!(p::PlotMeshHP)
         end
     end
     end
-    hidedecorations!(p)
+    # hidedecorations!(p)
     return p
 end
 
