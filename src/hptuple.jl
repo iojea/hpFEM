@@ -29,11 +29,11 @@ If `I` is not provided the type of the data is inferred from `eltype(x)`:
     8
 ```
 """
-struct TupleHP{L,I<:Integer} <: StaticArray{Tuple{L},I, 1}
+struct TupleHP{L,I<:Integer} <: StaticArray{Tuple{L},I,1}
     data::NTuple{L,I}
 
     function TupleHP{L,I}(x::NTuple{L,I}) where {L,I<:Integer}
-        check_array_parameters(Tuple{L},I,Val{1},Val{L})
+        check_array_parameters(Tuple{L}, I, Val{1}, Val{L})
         new{L,I}(x)
     end
 
@@ -45,27 +45,27 @@ end
 
 
 @inline TupleHP(x::Tuple) = TupleHP{length(x),eltype(x)}(x)
-@inline TupleHP{I}(x::Tuple) where I<:Integer = TupleHP(convert_ntuple(I,x))
+@inline TupleHP{I}(x::Tuple) where {I<:Integer} = TupleHP(convert_ntuple(I, x))
 
 @propagate_inbounds function getindex(v::TupleHP, i::Int)
-    getfield(v,:data)[i]
+    getfield(v, :data)[i]
 end
 
 
 const hashs_seed = UInt === UInt64 ? 0x793bac59abf9a1da : 0xdea7f1da
 function Base.hash(s::TupleHP, h::UInt)
     hv = hashs_seed
-    for x in getfield(s,:data)
+    for x in getfield(s, :data)
         hv ⊻= hash(x)
     end
-    hash(hash(hv, h),hash(typeof(s)))
+    hash(hash(hv, h), hash(typeof(s)))
 end
 
-Base.isequal(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && issubset(t1,t2)
+Base.isequal(t1::T, t2::T) where {T<:TupleHP} = length(t1) == length(t2) && issubset(t1, t2)
 
 
 ####################
-struct DegTuple{I<:Integer} <: StaticArray{Tuple{3},I, 1}
+struct DegTuple{I<:Integer} <: StaticArray{Tuple{3},I,1}
     data::NTuple{3,I}
 
     # function TupleHP{I}(x::NTuple{3,I}) where {I<:Integer}
@@ -84,20 +84,21 @@ end
 #@inline DegTuple(x::Tuple) = DegTuple{eltype(x)}(x)
 
 @propagate_inbounds function getindex(v::DegTuple, i::Int)
-    getfield(v,:data)[i]
+    getfield(v, :data)[i]
 end
 
 
 function Base.hash(s::DegTuple, h::UInt)
     hv = hashs_seed
-    for x in getfield(s,:data)
+    for x in getfield(s, :data)
         hv ⊻= hash(x)
     end
-    hash(hash(hv, h),hash(typeof(s)))
+    hash(hash(hv, h), hash(typeof(s)))
 end
 
 # Base.:(==)(t1::T,t2::T) where T<:TupleHP = length(t1)==length(t2) && t1⊆t2
-Base.isequal(t1::T,t2::T) where T<:DegTuple = length(t1)==length(t2) && issubset(t1,t2)
+Base.isequal(t1::T, t2::T) where {T<:DegTuple} =
+    length(t1) == length(t2) && issubset(t1, t2)
 
 # Base.issubset(t1::T,t2::T) where T<:TupleHP = vals(t1) ⊆ vals(t2)
 
@@ -132,10 +133,9 @@ Base.isequal(t1::T,t2::T) where T<:DegTuple = length(t1)==length(t2) && issubset
 # Base.view(A::AbstractArray,t::HPTuple,c::Colon) = view(A,vals(t),c)
 
 
-function Base.sizehint!(d::Dictionary,n::Int)
-    sizehint!(d.indices.slots,(1+n÷8)*8)
-    sizehint!(d.indices.hashes,n)
-    sizehint!(d.indices.values,n)
-    sizehint!(d.values,n)
+function Base.sizehint!(d::Dictionary, n::Int)
+    sizehint!(d.indices.slots, (1 + n ÷ 8) * 8)
+    sizehint!(d.indices.hashes, n)
+    sizehint!(d.indices.values, n)
+    sizehint!(d.values, n)
 end
-

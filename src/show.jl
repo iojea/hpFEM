@@ -3,13 +3,13 @@
 # Base.show(io::IO,t::TriangleHP) = show(io,Int.(t))
 
 #Show TriangleProperties
-function Base.show(io::IO,mime::MIME"text/plain",t::TriangleProperties) 
-    symbs = Dictionary(0:3,[:noref,:green,:blue,:red])
-    show(io,symbs[t.refine[]])
+function Base.show(io::IO, mime::MIME"text/plain", t::TriangleProperties)
+    symbs = Dictionary(0:3, [:noref, :green, :blue, :red])
+    show(io, symbs[t.refine[]])
 end
-function Base.show(io::IO,t::TriangleProperties) 
-    symbs = Dictionary(0:3,[:noref,:green,:blue,:red])
-    show(io,symbs[t.refine[]])
+function Base.show(io::IO, t::TriangleProperties)
+    symbs = Dictionary(0:3, [:noref, :green, :blue, :red])
+    show(io, symbs[t.refine[]])
 end
 
 # Show EdgeHP
@@ -17,34 +17,34 @@ end
 # Base.show(io::IO,t::EdgeHP) = show(io,Int.(t.nodes[:]))
 
 # Show EdgeProperties
-function Base.show(io::IO,mime::MIME"text/plain",t::EdgeProperties) 
-    if t.marker==0
+function Base.show(io::IO, mime::MIME"text/plain", t::EdgeProperties)
+    if t.marker == 0
         m = :Ω°
-    elseif t.marker==1
+    elseif t.marker == 1
         m = :∂𝔇
-    elseif t.marker==2
+    elseif t.marker == 2
         m = :∂𝔑
-    else 
+    else
         m = t.marker
     end
-    show(io,mime,(t.degree[],m,t.refine[]))
+    show(io, mime, (t.degree[], m, t.refine[]))
 end
-function Base.show(io::IO,t::EdgeProperties)
-    if t.marker==0
+function Base.show(io::IO, t::EdgeProperties)
+    if t.marker == 0
         m = :Ω°
-    elseif t.marker==1
+    elseif t.marker == 1
         m = :Γ𝔇
-    elseif t.marker==2
+    elseif t.marker == 2
         m = :Γ𝔫
-    else 
+    else
         m = t.marker
-    end 
+    end
     if t.refine[]
         r = :refine
     else
         r = :noref
     end
-    show(io,(t.degree[],m,r))
+    show(io, (t.degree[], m, r))
 end
 
 # Show HPList short.
@@ -79,8 +79,14 @@ function Base.show(io::IO, ::MIME"text/plain", d::Union{TriangleList,EdgeList})
 
     # Designed to be efficient for very large sets of unknown lengths
 
-    n_lines = max(Int64(3), get(io, :limit, false) ? Int64(displaysize(io)[1] - 4) : typemax(Int64))
-    n_cols = max(Int64(8), get(io, :limit, false) ? Int64(displaysize(io)[2] - 4) : typemax(Int64))
+    n_lines = max(
+        Int64(3),
+        get(io, :limit, false) ? Int64(displaysize(io)[1] - 4) : typemax(Int64),
+    )
+    n_cols = max(
+        Int64(8),
+        get(io, :limit, false) ? Int64(displaysize(io)[2] - 4) : typemax(Int64),
+    )
     n_lines_top = n_lines ÷ Int64(2)
     n_lines_bottom = n_lines - n_lines_top
 
@@ -156,9 +162,9 @@ function Base.show(io::IO, ::MIME"text/plain", d::Union{TriangleList,EdgeList})
         val_width = max_val_width
         ind_width = max_ind_width
         while ind_width + val_width > n_cols
-            if ind_width > val_width 
+            if ind_width > val_width
                 ind_width -= 1
-            else 
+            else
                 val_width -= 1
             end
         end
@@ -174,7 +180,7 @@ function Base.show(io::IO, ::MIME"text/plain", d::Union{TriangleList,EdgeList})
 
     for (ind_str, val_str) in zip(ind_strs, val_strs)
         print(io, "\n ")
-        print(io, " " ^ max(0, ind_width - textwidth(ind_str)))
+        print(io, " "^max(0, ind_width - textwidth(ind_str)))
         print(io, ind_str)
         print(io, " │ ")
         print(io, val_str)
@@ -203,31 +209,31 @@ function shrink_to!(strs, width)
 end
 
 # Show MeshHP
-function Base.show(io::IO,mime::MIME"text/plain",mesh::MeshHP{I,P}) where {I,P}
-    println(io,typeof(mesh))
+function Base.show(io::IO, mime::MIME"text/plain", mesh::MeshHP{I,P}) where {I,P}
+    println(io, typeof(mesh))
     header = Markdown.parse("""
         + $(size(mesh.points,2)) nodes.
         + $(length(mesh.trilist)) triangles.
         + $(length(mesh.edgelist)) edges.
     """)
-    show(io,mime,header)
+    show(io, mime, header)
     println(io)
-    show(io,mime,mesh.points)
-    println(io)
-    println(io)
-    show(io,mime,mesh.trilist)
+    show(io, mime, mesh.points)
     println(io)
     println(io)
+    show(io, mime, mesh.trilist)
     println(io)
-    show(io,mime,mesh.edgelist)
+    println(io)
+    println(io)
+    show(io, mime, mesh.edgelist)
 end
 
 
-function Base.show(io::IO,mesh::MeshHP)
-    println(io,)
-    show(io,mesh.points)
+function Base.show(io::IO, mesh::MeshHP)
     println(io)
-    show(io,mesh.trilist)
+    show(io, mesh.points)
     println(io)
-    show(io,mesh.edgelist)
+    show(io, mesh.trilist)
+    println(io)
+    show(io, mesh.edgelist)
 end
