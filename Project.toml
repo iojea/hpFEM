@@ -13,6 +13,7 @@ DelaunayTriangulation = "927a84f5-c5f4-47a5-9785-b46e178433df"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 ElasticArrays = "fdbdab4c-e67f-52f5-8c3f-e7b388dad3d4"
 ExactPredicates = "429591f6-91af-11e9-00e2-59fbe8cec110"
+FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 GrundmannMoeller = "36aa67b7-9d79-4e90-bbc0-05abd90a007e"
 HyperDualNumbers = "50ceba7f-c3ee-5a84-a6e8-3ad40456ec97"
 LegendrePolynomials = "3db4a2ba-fc88-11e8-3e01-49c72059a882"
@@ -27,6 +28,7 @@ StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
 
 [compat]
+FillArrays = "1.13.0"
 julia = "1"
 
 [extras]
